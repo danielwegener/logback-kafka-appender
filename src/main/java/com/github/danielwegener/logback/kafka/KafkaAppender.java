@@ -6,7 +6,6 @@ import ch.qos.logback.core.UnsynchronizedAppenderBase;
 import ch.qos.logback.core.filter.Filter;
 import ch.qos.logback.core.spi.FilterReply;
 import ch.qos.logback.core.status.ErrorStatus;
-import ch.qos.logback.core.status.Status;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.KafkaException;
@@ -14,10 +13,7 @@ import org.apache.kafka.common.serialization.ByteArraySerializer;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.ExecutionException;
 
 public class KafkaAppender<E extends ILoggingEvent> extends UnsynchronizedAppenderBase<E> {
 
@@ -68,6 +64,12 @@ public class KafkaAppender<E extends ILoggingEvent> extends UnsynchronizedAppend
             case THREAD:
                 if (hostnameHash != null) {
                     return ByteBuffer.allocate(8).put(hostnameHash).putInt(e.getThreadName().hashCode()).array();
+                } else {
+                    return ByteBuffer.allocate(4).putInt(e.getThreadName().hashCode()).array();
+                }
+            case LOGGER_NAME:
+                if (hostnameHash != null) {
+                    return ByteBuffer.allocate(8).put(hostnameHash).putInt(e.getLoggerName().hashCode()).array();
                 } else {
                     return ByteBuffer.allocate(4).putInt(e.getThreadName().hashCode()).array();
                 }
