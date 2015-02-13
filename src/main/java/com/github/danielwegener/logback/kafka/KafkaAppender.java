@@ -11,7 +11,7 @@ import org.apache.kafka.common.serialization.ByteArraySerializer;
 import java.util.HashMap;
 import java.util.Map;
 
-public class KafkaAppender<E extends ILoggingEvent> extends KafkaAppenderConfig<E, byte[]> {
+public class KafkaAppender<E extends ILoggingEvent> extends KafkaAppenderConfig<E> {
 
     public KafkaAppender() {
         addFilter(new Filter<E>() {
@@ -37,17 +37,11 @@ public class KafkaAppender<E extends ILoggingEvent> extends KafkaAppenderConfig<
 
     @Override
     protected void append(E e) {
-        final String message = layout.doLayout(e);
-        final byte[] payload;
-        if (!message.isEmpty()) {
-            payload = message.getBytes(charset);
-        } else {
-            payload = new byte[0];
-        }
+        final byte[] payload = encoder.doEncode(e);
         final byte[] key = partitioningStrategy.createKey(e);
         producer.partitionsFor(topic);
         final ProducerRecord<byte[], byte[]> record = new ProducerRecord<byte[],byte[]>(topic, key, payload);
-        sendStrategy.send(producer,record, e);
+        deliveryStrategy.send(producer,record, e);
     }
 
 

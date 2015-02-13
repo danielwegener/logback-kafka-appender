@@ -1,14 +1,12 @@
 package com.github.danielwegener.logback.kafka;
 
-import ch.qos.logback.core.Layout;
 import ch.qos.logback.core.UnsynchronizedAppenderBase;
 import ch.qos.logback.core.status.ErrorStatus;
-import ch.qos.logback.core.status.InfoStatus;
-import com.github.danielwegener.logback.kafka.delivery.SendStrategy;
+import com.github.danielwegener.logback.kafka.delivery.DeliveryStrategy;
+import com.github.danielwegener.logback.kafka.encoding.KafkaEncoder;
 import com.github.danielwegener.logback.kafka.partitioning.PartitioningStrategy;
 import org.apache.kafka.clients.producer.ProducerConfig;
 
-import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -17,15 +15,13 @@ import java.util.Set;
 /**
  * @author Daniel Wegener (Holisticon AG)
  */
-public abstract class KafkaAppenderConfig<E,K> extends UnsynchronizedAppenderBase<E> {
+public abstract class KafkaAppenderConfig<E> extends UnsynchronizedAppenderBase<E> {
 
-    private static final Charset UTF8 = Charset.forName("UTF-8");
     protected String topic = null;
-    protected Layout<E> layout = null;
 
-    protected Charset charset = null;
-    protected PartitioningStrategy<K> partitioningStrategy = null;
-    protected SendStrategy<? super E> sendStrategy;
+    protected KafkaEncoder<E> encoder = null;
+    protected PartitioningStrategy<E> partitioningStrategy = null;
+    protected DeliveryStrategy<? super E> deliveryStrategy;
 
     public static final Set<String> KNOWN_PRODUCER_CONFIG_KEYS = new HashSet<String>();
     static {
@@ -72,53 +68,37 @@ public abstract class KafkaAppenderConfig<E,K> extends UnsynchronizedAppenderBas
             errorFree = false;
         }
 
-        if (layout == null) {
-            addStatus(new ErrorStatus("No layout set for the appender named \"" + name + "\".", this));
+        if (encoder == null) {
+            addStatus(new ErrorStatus("No encoder set for the appender named \"" + name + "\".", this));
             errorFree = false;
         }
 
-        if (charset == null) {
-            addStatus(new InfoStatus("No charset specified for the appender named \"" + name + "\". Using default UTF8 encoding.", this));
-            charset = UTF8;
-        }
 
         if (partitioningStrategy == null) {
             addError("No partitionStrategy set for the appender named \"" + name + "\".");
             errorFree = false;
         }
 
-        if (sendStrategy == null) {
+        if (deliveryStrategy == null) {
             addInfo("No sendStrategy defined. Using default BLOCKING strategy.");
-            sendStrategy = SendStrategy.KnownStrategies.forName("BLOCKING");
+            deliveryStrategy = DeliveryStrategy.KnownStrategies.forName("BLOCKING");
         }
 
         return errorFree;
     }
 
-    /** Sets the charset
-     * @see java.nio.charset.Charset#forName(String)  */
-    public void setCharset(Charset charset) {
-        this.charset = charset;
-    }
-
     /**  */
-    public void setLayout(Layout<E> layout) {
-        this.layout = layout;
+    public void setEncoder(KafkaEncoder<E> layout) {
+        this.encoder = layout;
     }
 
     public void setTopic(String topic) {
         this.topic = topic;
     }
 
-    public void setPartitioningStrategy(PartitioningStrategy<K> partitioningStrategy) {
+    public void setPartitioningStrategy(PartitioningStrategy<E> partitioningStrategy) {
         this.partitioningStrategy = partitioningStrategy;
     }
-
-    //public void setPartitioningStrategy(String partitioningStrategyName) {
-    //    this.partitioningStrategy = (PartitioningStrategy<K>) PartitioningStrategy.KnownStrategies.forName(partitioningStrategyName);
-    //}
-
-
 
     public void addProducerConfig(String keyValue) {
         String[] split = keyValue.split("=", 2);
@@ -139,12 +119,12 @@ public abstract class KafkaAppenderConfig<E,K> extends UnsynchronizedAppenderBas
         this.producerConfig.put(entry.getKey(), entry.getValue());
     }
 
-    public void setSendStrategy(SendStrategy<E> sendStrategy) {
-        this.sendStrategy = sendStrategy;
+    public void setDeliveryStrategy(DeliveryStrategy<E> deliveryStrategy) {
+        this.deliveryStrategy = deliveryStrategy;
     }
 
     public void setSendStrategy(String sendStrategyName) {
-        this.sendStrategy = SendStrategy.KnownStrategies.forName(sendStrategyName);
+        this.deliveryStrategy = DeliveryStrategy.KnownStrategies.forName(sendStrategyName);
     }
 
 

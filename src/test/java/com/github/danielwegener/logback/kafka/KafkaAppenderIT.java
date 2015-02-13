@@ -8,6 +8,7 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.classic.spi.LoggingEvent;
 import ch.qos.logback.core.status.Status;
 import ch.qos.logback.core.status.StatusListener;
+import com.github.danielwegener.logback.kafka.encoding.PatternLayoutKafkaEncoder;
 import com.github.danielwegener.logback.kafka.partitioning.RoundRobinPartitioningStrategy;
 import com.github.danielwegener.logback.kafka.util.TestKafka;
 import kafka.consumer.Consumer;
@@ -73,20 +74,26 @@ public class KafkaAppenderIT {
         });
         loggerContext.putProperty("HOSTNAME","localhost");
 
-
         unit = new KafkaAppender<ILoggingEvent>();
-        unit.setLayout(new PatternLayout());
+        final PatternLayout patternLayout = new PatternLayout();
+        patternLayout.setPattern("%m");
+        unit.setEncoder(new PatternLayoutKafkaEncoder(patternLayout, Charset.forName("UTF-8")));
         unit.setTopic("logs");
         unit.setName("TestKafkaAppender");
         unit.setContext(loggerContext);
         unit.addProducerConfigValue(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafka.getBrokerList());
-        unit.setPartitioningStrategy(new RoundRobinPartitioningStrategy<byte[]>());
+        unit.setPartitioningStrategy(new RoundRobinPartitioningStrategy<ILoggingEvent>());
     }
 
     @After
     public void tearDown() {
         kafka.shutdown();
         kafka.awaitShutdown();
+    }
+
+    @Test
+    public void noop() {
+
     }
 
     @Test
@@ -102,7 +109,6 @@ public class KafkaAppenderIT {
         Assert.assertTrue("appender is started", unit.isStarted());
         Thread.sleep(5000);
         unit.append(loggingEvent);
-
 
         final Properties consumerProperties = new Properties();
         consumerProperties.put("metadata.broker.list", kafka.getBrokerList());

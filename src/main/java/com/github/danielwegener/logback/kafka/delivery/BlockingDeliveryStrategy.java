@@ -5,7 +5,7 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 
 import java.util.concurrent.ExecutionException;
 
-public class BlockingSendStrategy<E> implements SendStrategy<E> {
+public class BlockingDeliveryStrategy<E> implements DeliveryStrategy<E> {
 
     @Override
     public <K, V> boolean send(KafkaProducer<K, V> producer, ProducerRecord<K, V> record, E event) {
