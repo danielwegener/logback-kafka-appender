@@ -8,11 +8,10 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.KafkaException;
 import org.apache.kafka.common.serialization.ByteArraySerializer;
 
-import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
 import java.util.HashMap;
+import java.util.Map;
 
-public class KafkaAppender<E extends ILoggingEvent> extends KafkaAppenderConfig<E> {
+public class KafkaAppender<E extends ILoggingEvent> extends KafkaAppenderConfig<E, byte[]> {
 
     public KafkaAppender() {
         addFilter(new Filter<E>() {
@@ -32,20 +31,23 @@ public class KafkaAppender<E extends ILoggingEvent> extends KafkaAppenderConfig<
      */
     private static final String KAFKA_LOGGER_PREFIX = "org.apache.kafka.clients";
 
-    private static final Charset UTF8 = Charset.forName("UTF-8");
 
     private KafkaProducer<byte[], byte[]> producer = null;
 
-    private String topic = null;
-    private byte[] hostnameHash = null;
 
     @Override
     protected void append(E e) {
         final String message = layout.doLayout(e);
-        final byte[] payload = message.getBytes(charset);
-        final byte[] key = partitioningStrategy.createKey(e, hostnameHash);
+        final byte[] payload;
+        if (!message.isEmpty()) {
+            payload = message.getBytes(charset);
+        } else {
+            payload = new byte[0];
+        }
+        final byte[] key = partitioningStrategy.createKey(e);
+        producer.partitionsFor(topic);
         final ProducerRecord<byte[], byte[]> record = new ProducerRecord<byte[],byte[]>(topic, key, payload);
-        producer.send(record);
+        sendStrategy.send(producer,record, e);
     }
 
 
@@ -53,30 +55,19 @@ public class KafkaAppender<E extends ILoggingEvent> extends KafkaAppenderConfig<
 
     @Override
     public void start() {
-        if (this.topic == null)
-            this.topic = context.getProperty("topic");
-
+        // only error free appenders should be activated
         if (!checkPrerequisites()) return;
 
-        final String hostname = context.getProperty("HOSTNAME");
-        if (hostname != null) {
-            hostnameHash = ByteBuffer.allocate(4).putInt(hostname.hashCode()).array();
-        } else {
-            this.addWarn("Could not determine hostname. PartitionStrategy HOSTNAME will not work.");
-        }
-
-        if (charset == null) {
-            addInfo("No charset specified. Using default UTF8 encoding.");
-            charset = UTF8;
-        }
-
-        if (partitioningStrategy == null) {
-            addInfo("No partitionStrategy defined. Using default ROUND_ROBIN strategy.");
-            partitioningStrategy = PartitioningStrategy.ROUND_ROBIN;
+        // Copy any valid kafka producer config from the context properties if not explicitly configured yet
+        for (Map.Entry<String, Object> entry : producerConfig.entrySet()) {
+            final String key = entry.getKey();
+            if (entry.getValue() == null) {
+                entry.setValue(getContext().getProperty(key));
+            }
         }
 
         final ByteArraySerializer serializer = new ByteArraySerializer();
-        producer = new  KafkaProducer<byte[], byte[]>(new HashMap<String, Object>(context.getCopyOfPropertyMap()), serializer, serializer);
+        producer = new  KafkaProducer<byte[], byte[]>(new HashMap<String, Object>(producerConfig), serializer, serializer);
 
         super.start();
     }
@@ -98,7 +89,6 @@ public class KafkaAppender<E extends ILoggingEvent> extends KafkaAppenderConfig<
     public boolean isStarted() {
         return super.isStarted();
     }
-
 
 
 }

@@ -130,10 +130,16 @@ public class EmbeddedKafkaCluster {
         }
     }
 
+    public void awaitShutdown() {
+        for (KafkaServer broker : brokers) {
+                broker.awaitShutdown();
+        }
+    }
+
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder("EmbeddedKafkaCluster{");
-        sb.append("brokerList='").append(brokerList).append('\'');
+        sb.append("boostrapServers='").append(brokerList).append('\'');
         sb.append('}');
         return sb.toString();
     }
