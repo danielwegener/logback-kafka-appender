@@ -5,7 +5,7 @@ cache:
   - $HOME/.m2
 jdk:
 - openjdk6
-#install: mvn install -DskipTests=true -q
+install: mvn install -DskipTests=true -Dgpg.skip=true;
 
 # Run unit and integration tests
 script: mvn verify -B -q
