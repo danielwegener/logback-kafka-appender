@@ -3,7 +3,7 @@ package com.github.danielwegener.logback.kafka.encoding;
 import ch.qos.logback.core.spi.ContextAwareBase;
 import ch.qos.logback.core.spi.LifeCycle;
 
-public abstract class KafkaEncoderBase<E> extends ContextAwareBase implements KafkaEncoder<E>, LifeCycle {
+public abstract class KafkaMessageEncoderBase<E> extends ContextAwareBase implements KafkaMessageEncoder<E>, LifeCycle {
 
     private boolean started = false;
 

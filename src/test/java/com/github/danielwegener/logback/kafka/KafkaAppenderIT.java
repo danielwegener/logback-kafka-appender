@@ -8,7 +8,7 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.classic.spi.LoggingEvent;
 import ch.qos.logback.core.status.Status;
 import ch.qos.logback.core.status.StatusListener;
-import com.github.danielwegener.logback.kafka.encoding.PatternLayoutKafkaEncoder;
+import com.github.danielwegener.logback.kafka.encoding.PatternLayoutKafkaMessageEncoder;
 import com.github.danielwegener.logback.kafka.partitioning.RoundRobinPartitioningStrategy;
 import com.github.danielwegener.logback.kafka.util.TestKafka;
 import kafka.consumer.Consumer;
@@ -67,7 +67,7 @@ public class KafkaAppenderIT {
         unit = new KafkaAppender<ILoggingEvent>();
         final PatternLayout patternLayout = new PatternLayout();
         patternLayout.setPattern("%m");
-        unit.setEncoder(new PatternLayoutKafkaEncoder(patternLayout, Charset.forName("UTF-8")));
+        unit.setEncoder(new PatternLayoutKafkaMessageEncoder(patternLayout, Charset.forName("UTF-8")));
         unit.setTopic("logs");
         unit.setName("TestKafkaAppender");
         unit.setContext(loggerContext);

@@ -3,7 +3,7 @@ package com.github.danielwegener.logback.kafka;
 import ch.qos.logback.core.UnsynchronizedAppenderBase;
 import ch.qos.logback.core.status.ErrorStatus;
 import com.github.danielwegener.logback.kafka.delivery.DeliveryStrategy;
-import com.github.danielwegener.logback.kafka.encoding.KafkaEncoder;
+import com.github.danielwegener.logback.kafka.encoding.KafkaMessageEncoder;
 import com.github.danielwegener.logback.kafka.partitioning.PartitioningStrategy;
 import org.apache.kafka.clients.producer.ProducerConfig;
 
@@ -16,7 +16,7 @@ public abstract class KafkaAppenderConfig<E> extends UnsynchronizedAppenderBase<
 
     protected String topic = null;
 
-    protected KafkaEncoder<E> encoder = null;
+    protected KafkaMessageEncoder<E> encoder = null;
     protected PartitioningStrategy partitioningStrategy = null;
     protected DeliveryStrategy<? super E> deliveryStrategy;
 
@@ -85,7 +85,7 @@ public abstract class KafkaAppenderConfig<E> extends UnsynchronizedAppenderBase<
     }
 
     /**  */
-    public void setEncoder(KafkaEncoder<E> layout) {
+    public void setEncoder(KafkaMessageEncoder<E> layout) {
         this.encoder = layout;
     }
 

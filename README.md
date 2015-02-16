@@ -59,6 +59,31 @@ It uses the producer default configuration.
 You may override any known kafka producer config with an `<producerConfig>Name=Value</producerConfig>` block (Note that the `boostrap.servers` config is mandatory).
 This allows a lot of fine tuning potential (eg. with `batch.size`, `compression.type` and `linger.ms`).
 
+## Serialization
+
+Kafka ships with an `PatternLayoutKafkaEncoder` that works like a common `PatternLayoutEncoder`
+(with the distinction that it creates kafka message payloads instead of appending to a `OutputStream`).
+
+The `PatternLayoutKafkaEncoder` takes a common `PatternLayout` as layout-parameter.
+
+### Custom Serialization
+
+TBD Just roll your own `KafkaMessageEncoder`. The interface is quite simple:
+
+```java
+package com.github.danielwegener.logback.kafka.encoding;
+public interface KafkaMessageEncoder<E> {
+    byte[] doEncode(E loggingEvent);
+}
+
+```
+Your encoder should be type-parameterized for any subtype of ILoggingEvent like in
+```java
+public class MyEncoder extends KafkaMessageEncoderBase<ILoggingEvent> { //...
+```
+
+You may also extend The `KafkaMessageEncoderBase` class that already implements the `ContextAware` and `Lifecycle` interfaces.
+
 ## Delivery strategies
 
 TBD

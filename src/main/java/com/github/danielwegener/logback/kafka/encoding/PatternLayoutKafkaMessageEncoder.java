@@ -5,12 +5,12 @@ import ch.qos.logback.core.Layout;
 
 import java.nio.charset.Charset;
 
-public class PatternLayoutKafkaEncoder extends KafkaEncoderBase<ILoggingEvent> {
+public class PatternLayoutKafkaMessageEncoder extends KafkaMessageEncoderBase<ILoggingEvent> {
 
-    public PatternLayoutKafkaEncoder() {
+    public PatternLayoutKafkaMessageEncoder() {
     }
 
-    public PatternLayoutKafkaEncoder(Layout<ILoggingEvent> layout, Charset charset) {
+    public PatternLayoutKafkaMessageEncoder(Layout<ILoggingEvent> layout, Charset charset) {
         this.layout = layout;
         this.charset = charset;
     }
