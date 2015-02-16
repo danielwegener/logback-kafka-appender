@@ -49,6 +49,7 @@ Add `logback-kafka-appender` and `logback-classic` as libraray dependencies to y
 
 ## Full configuration example
 
+TBD
 
 ### Producer tuning
 
@@ -63,6 +64,8 @@ This allows a lot of fine tuning potential (eg. with `batch.size`, `compression.
 TBD
 
 ### Custom delivery strategies
+
+TBD
 
 
 ## Keying strategies / Partitioning
@@ -105,7 +108,7 @@ public class MyPartitioningStrategy implements PartitioningStrategy {
 As most custom logback component, your custom partitioning strategy may implement the
 `ch.qos.logback.core.spi.ContextAware` and `ch.qos.logback.core.spi.LifeCycle` interfaces.
 
-A custom keying strategy may especially become handy when you want to use
+A custom keying strategy may especially become handy when you want to use kafka's log compactation facility.
 
 ## FAQ
 
