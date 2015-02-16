@@ -64,7 +64,9 @@ This allows a lot of fine tuning potential (eg. with `batch.size`, `compression.
 Kafka ships with an `PatternLayoutKafkaEncoder` that works like a common `PatternLayoutEncoder`
 (with the distinction that it creates kafka message payloads instead of appending to a `OutputStream`).
 
-The `PatternLayoutKafkaEncoder` takes a common `PatternLayout` as layout-parameter.
+The `PatternLayoutKafkaEncoder` takes a common `ch.qos.logback.core.Layout` as layout-parameter.
+
+You may also use any layout that is capable of laying out an `ILoggingEvent` like the [logstash-logback-encoder's layout](https://github.com/logstash/logstash-logback-encoder#usage).
 
 ### Custom Serialization
 
