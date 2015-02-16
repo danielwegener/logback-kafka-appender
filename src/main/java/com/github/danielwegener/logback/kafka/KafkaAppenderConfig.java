@@ -12,15 +12,12 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-/**
- * @author Daniel Wegener (Holisticon AG)
- */
 public abstract class KafkaAppenderConfig<E> extends UnsynchronizedAppenderBase<E> {
 
     protected String topic = null;
 
     protected KafkaEncoder<E> encoder = null;
-    protected PartitioningStrategy<E> partitioningStrategy = null;
+    protected PartitioningStrategy partitioningStrategy = null;
     protected DeliveryStrategy<? super E> deliveryStrategy;
 
     public static final Set<String> KNOWN_PRODUCER_CONFIG_KEYS = new HashSet<String>();
@@ -96,7 +93,7 @@ public abstract class KafkaAppenderConfig<E> extends UnsynchronizedAppenderBase<
         this.topic = topic;
     }
 
-    public void setPartitioningStrategy(PartitioningStrategy<E> partitioningStrategy) {
+    public void setPartitioningStrategy(PartitioningStrategy partitioningStrategy) {
         this.partitioningStrategy = partitioningStrategy;
     }
 

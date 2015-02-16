@@ -1,9 +1,16 @@
 <configuration>
 
-   <appender name="Kafkafkaf" class="com.github.danielwegener.logback.kafka.KafkaAppender">
-       <encoder class="com.github.danielwegener.logback.kafka.encoding.PatternLayoutKafkaEncoder">
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+
+    <appender name="kafkaAppender" class="com.github.danielwegener.logback.kafka.KafkaAppender">
+       <encoder>
            <layout class="ch.qos.logback.classic.PatternLayout">
-               <pattern>%msg</pattern>
+               <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
            </layout>
        </encoder>
 
@@ -13,18 +20,10 @@
 
         <producerConfig>bootstrap.servers=localhost:9092</producerConfig>
     </appender>
-    <logger name="IT" additivity="false" level="info">
-        <appender-ref ref="Kafkafkaf"/>
-    </logger>
 
-
-    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder>
-            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
-        </encoder>
-    </appender>
 
     <root level="info">
         <appender-ref ref="STDOUT" />
+        <appender-ref ref="kafkaAppender" />
     </root>
 </configuration>

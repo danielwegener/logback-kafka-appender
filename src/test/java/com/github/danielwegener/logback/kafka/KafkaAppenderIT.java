@@ -91,10 +91,6 @@ public class KafkaAppenderIT {
         kafka.awaitShutdown();
     }
 
-    @Test
-    public void noop() {
-
-    }
 
     @Test
     public void testLogging() throws InterruptedException {

@@ -12,7 +12,7 @@ import java.nio.ByteBuffer;
  * This is ensures that all log messages logged by the same logging context will remain in the correct order for any consumer.
  * But this strategy can lead to uneven log distribution for a small number of hosts (compared to the number of partitions).
  */
-public class ContextNamePartitioningStrategy extends ContextAwareBase implements PartitioningStrategy<byte[]> {
+public class ContextNamePartitioningStrategy extends ContextAwareBase implements PartitioningStrategy {
 
     private byte[] contextNameHash = null;
 
