@@ -50,29 +50,41 @@ Add `logback-kafka-appender` and `logback-classic` as libraray dependencies to y
 ## Full configuration example
 
 
-## Delivery guarantee
+### Producer tuning
+
+This appender uses the [_new_ kafka producer](https://kafka.apache.org/documentation.html#newproducerconfigs) introduced in kafka-0.8.2.
+It uses the producer default configuration.
+
+You may override any known kafka producer config with an `<producerConfig>Name=Value</producerConfig>` block (Note that the `boostrap.servers` config is mandatory).
+This allows a lot of fine tuning potential (eg. with `batch.size`, `compression.type` and `linger.ms`).
+
+## Delivery strategies
+
+TBD
+
+### Custom delivery strategies
 
 
+## Keying strategies / Partitioning
 
-## Keying strategy / Partitioning
-
-Kafka's scalability and ordering guarantees heavily rely on the concepts of partitions ([more details here](TBD)).
-For logging this means that we need to decide how we want to distribute our log messages over multiple kafka
+Kafka's scalability and ordering guarantees heavily rely on the concepts of partitions ([more details here](https://kafka.apache.org/documentation.html#introduction)).
+For application logging this means that we need to decide how we want to distribute our log messages over multiple kafka
 topic partitions. One implication of this decision is how messages are ordered when they are consumed from a
-arbitrary multi-partition consumer. Another implication is how evenly our log messages are distributed across all
- available partitions.
+arbitrary multi-partition consumer since kafka only provides a guaranteed read order only on each single partition.
+Another implication is how evenly our log messages are distributed across all available partitions and therefore balanced
+between multiple brokers.
 
-The order may or may not be important, depending on the inteded consumer-audience (e.g. a logstash indexer will reorder all message by its timestamp anyway).
+The order may or may not be important, depending on the intended consumer-audience (e.g. a logstash indexer will reorder all message by its timestamp anyway).
 The kafka producer client uses a messages key as partitioner. Thus `logback-kafka-appender` supports
 the following partitioning strategies:
 
 | Strategy   | Description  |
 |---|---|
-| `RoundRobinPartitioningStrategy` (default)   | Evenly distributes all written log messages over all available kafka partitions. This strategy can lead to unexpected read orders on clients.   |
+| `RoundRobinPartitioningStrategy` (default)   | Evenly distributes all written log messages over all available kafka partitions. This strategy may lead to unexpected read orders on clients.   |
 | `HostNamePartitioningStrategy` | This strategy uses the HOSTNAME to partition the log messages to kafka. This is useful because it ensures that all log messages issued by this host will remain in the correct order for any consumer. But this strategy can lead to uneven log distribution for a small number of hosts (compared to the number of partitions). |
 | `ContextNamePartitioningStrategy` |  This strategy uses logbacks CONTEXT_NAME to partition the log messages to kafka. This is ensures that all log messages logged by the same logging context will remain in the correct order for any consumer. But this strategy can lead to uneven log distribution for a small number of hosts (compared to the number of partitions).  |
 | `ThreadNamePartitioningStrategy` |  This strategy uses the calling threads name as partitioning key. This ensures that all messages logged by the same thread will remain in the correct order for any consumer. But this strategy can lead to uneven log distribution for a small number of thread(-names) (compared to the number of partitions). |
-| `LoggerNamePartitioningStrategy` | * This strategy uses the hostname and the logger name as partitioning key. This ensures that all messages logged by the same logger will remain in the correct order for any consumer. But this strategy can lead to uneven log distribution for a small number of distinct loggers (compared to the number of partitions). |
+| `LoggerNamePartitioningStrategy` | * This strategy uses the logger name as partitioning key. This ensures that all messages logged by the same logger will remain in the correct order for any consumer. But this strategy can lead to uneven log distribution for a small number of distinct loggers (compared to the number of partitions). |
 
 ### Custom keying strategies
 
@@ -93,9 +105,7 @@ public class MyPartitioningStrategy implements PartitioningStrategy {
 As most custom logback component, your custom partitioning strategy may implement the
 `ch.qos.logback.core.spi.ContextAware` and `ch.qos.logback.core.spi.LifeCycle` interfaces.
 
-
-
-
+A custom keying strategy may especially become handy when you want to use
 
 ## FAQ
 
