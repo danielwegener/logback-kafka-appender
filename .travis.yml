@@ -1,0 +1,17 @@
+language: java
+sudo: false
+cache:
+  directories:
+  - $HOME/.m2
+jdk:
+- openjdk6
+#install: mvn install -DskipTests=true -q
+
+# Run unit and integration tests
+script: mvn verify -B -q
+
+after_success: ! '[[ $TRAVIS_BRANCH == "master" && $TRAVIS_REPO_SLUG == "danielwegener/logback-kafka-appender"
+  && $TRAVIS_PULL_REQUEST == "false" ]] && { curl https://raw.githubusercontent.com/holisticon/travis-configuration/master/settings.xml --location
+  --create-dirs -o target/travis/settings.xml; } && { mvn deploy -q --settings target/travis/settings.xml
+  -Dgpg.skip=true; }'
+
