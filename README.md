@@ -15,10 +15,14 @@ Add `logback-kafka-appender` and `logback-classic` as libraray dependencies to y
 ```xml
 [pom.xml]
 <dependency>
+    <groupId>com.github.danielwegener</groupId>
+    <artifactId>logback-kafka-appender</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+</dependency>
+<dependency>
     <groupId>ch.qos.logback</groupId>
     <artifactId>logback-classic</artifactId>
     <version>1.1.2</version>
-    <scope>provided</scope>
 </dependency>
 ```
 
@@ -62,9 +66,13 @@ The order may or may not be important, depending on the inteded consumer-audienc
 The kafka producer client uses a messages key as partitioner. Thus `logback-kafka-appender` supports
 the following partitioning strategies:
 
-
-_TODO TABLE_
-
+| Strategy   | Description  |
+|---|---|
+| `RoundRobinPartitioningStrategy` (default)   | Evenly distributes all written log messages over all available kafka partitions. This strategy can lead to unexpected read orders on clients.   |
+| `HostNamePartitioningStrategy` | This strategy uses the HOSTNAME to partition the log messages to kafka. This is useful because it ensures that all log messages issued by this host will remain in the correct order for any consumer. But this strategy can lead to uneven log distribution for a small number of hosts (compared to the number of partitions). |
+| `ContextNamePartitioningStrategy` |  This strategy uses logbacks CONTEXT_NAME to partition the log messages to kafka. This is ensures that all log messages logged by the same logging context will remain in the correct order for any consumer. But this strategy can lead to uneven log distribution for a small number of hosts (compared to the number of partitions).  |
+| `ThreadNamePartitioningStrategy` |  This strategy uses the calling threads name as partitioning key. This ensures that all messages logged by the same thread will remain in the correct order for any consumer. But this strategy can lead to uneven log distribution for a small number of thread(-names) (compared to the number of partitions). |
+| `LoggerNamePartitioningStrategy` | * This strategy uses the hostname and the logger name as partitioning key. This ensures that all messages logged by the same logger will remain in the correct order for any consumer. But this strategy can lead to uneven log distribution for a small number of distinct loggers (compared to the number of partitions). |
 
 ### Custom keying strategies
 
