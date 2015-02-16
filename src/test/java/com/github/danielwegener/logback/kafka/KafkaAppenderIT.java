@@ -14,13 +14,8 @@ import com.github.danielwegener.logback.kafka.util.TestKafka;
 import kafka.consumer.Consumer;
 import kafka.consumer.ConsumerIterator;
 import kafka.consumer.KafkaStream;
-import kafka.consumer.TopicFilter;
 import kafka.consumer.Whitelist;
 import kafka.javaapi.consumer.ConsumerConnector;
-import kafka.message.MessageAndMetadata;
-import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.clients.consumer.ConsumerRecords;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.junit.After;
 import org.junit.Assert;
@@ -28,16 +23,11 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ErrorCollector;
-import scala.Function1;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 import java.util.Random;
-import java.util.concurrent.ThreadLocalRandom;
 
 
 public class KafkaAppenderIT {
@@ -82,7 +72,7 @@ public class KafkaAppenderIT {
         unit.setName("TestKafkaAppender");
         unit.setContext(loggerContext);
         unit.addProducerConfigValue(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafka.getBrokerList());
-        unit.setPartitioningStrategy(new RoundRobinPartitioningStrategy<ILoggingEvent>());
+        unit.setPartitioningStrategy(new RoundRobinPartitioningStrategy());
     }
 
     @After
@@ -108,7 +98,7 @@ public class KafkaAppenderIT {
 
         final Properties consumerProperties = new Properties();
         consumerProperties.put("metadata.broker.list", kafka.getBrokerList());
-        consumerProperties.put("group.id", "simple-consumer-"+ ThreadLocalRandom.current().nextInt());
+        consumerProperties.put("group.id", "simple-consumer-" + new Random().nextInt());
         consumerProperties.put("auto.commit.enable","false");
         consumerProperties.put("auto.offset.reset","smallest");
         consumerProperties.put("zookeeper.connect", kafka.getZookeeperConnection());
