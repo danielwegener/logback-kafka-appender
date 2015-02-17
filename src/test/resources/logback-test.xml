@@ -1,6 +1,6 @@
 <configuration>
 
-   <appender name="Kafkafkaf" class="com.github.danielwegener.logback.kafka.KafkaAppender">
+   <appender name="Kafkafkaf" class="com.github.danielwegener.logback.kafka.KafkaAppenderBase">
        <encoder class="com.github.danielwegener.logback.kafka.encoding.PatternLayoutKafkaMessageEncoder">
            <layout class="ch.qos.logback.classic.PatternLayout">
                <pattern>%msg</pattern>

@@ -2,9 +2,11 @@ package com.github.danielwegener.logback.kafka;
 
 import ch.qos.logback.core.UnsynchronizedAppenderBase;
 import ch.qos.logback.core.status.ErrorStatus;
+import com.github.danielwegener.logback.kafka.delivery.BlockingDeliveryStrategy;
 import com.github.danielwegener.logback.kafka.delivery.DeliveryStrategy;
 import com.github.danielwegener.logback.kafka.encoding.KafkaMessageEncoder;
 import com.github.danielwegener.logback.kafka.partitioning.PartitioningStrategy;
+import com.github.danielwegener.logback.kafka.partitioning.RoundRobinPartitioningStrategy;
 import org.apache.kafka.clients.producer.ProducerConfig;
 
 import java.util.HashMap;
@@ -54,31 +56,32 @@ public abstract class KafkaAppenderConfig<E> extends UnsynchronizedAppenderBase<
     protected boolean checkPrerequisites() {
         boolean errorFree = true;
 
+
+
         if (producerConfig.get(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG) == null) {
-            addStatus(new ErrorStatus("No \""+ProducerConfig.BOOTSTRAP_SERVERS_CONFIG+"\" set for the appender named \""
-                    + name + "\".", this));
+            addError("No \"" + ProducerConfig.BOOTSTRAP_SERVERS_CONFIG + "\" set for the appender named [\""
+                    + name + "\"].");
             errorFree = false;
         }
 
         if (topic == null) {
-            addStatus(new ErrorStatus("No topic set for the appender named \"" + name + "\".", this));
+            addStatus(new ErrorStatus("No topic set for the appender named [\"" + name + "\"].", this));
             errorFree = false;
         }
 
         if (encoder == null) {
-            addStatus(new ErrorStatus("No encoder set for the appender named \"" + name + "\".", this));
+            addStatus(new ErrorStatus("No encoder set for the appender named [\"" + name + "\"].", this));
             errorFree = false;
         }
 
-
         if (partitioningStrategy == null) {
-            addError("No partitionStrategy set for the appender named \"" + name + "\".");
-            errorFree = false;
+            addError("No partitionStrategy set for the appender named [\"" + name + "\"]. Using default RoundRobin strategy.");
+            partitioningStrategy = new RoundRobinPartitioningStrategy();
         }
 
         if (deliveryStrategy == null) {
-            addInfo("No sendStrategy defined. Using default BLOCKING strategy.");
-            deliveryStrategy = DeliveryStrategy.KnownStrategies.forName("BLOCKING");
+            addInfo("No sendStrategy set for the appender named [\""+name+"\"]. Using default Blocking strategy.");
+            deliveryStrategy = new BlockingDeliveryStrategy<E>();
         }
 
         return errorFree;
@@ -110,19 +113,11 @@ public abstract class KafkaAppenderConfig<E> extends UnsynchronizedAppenderBase<
         this.producerConfig.put(key,value);
     }
 
-    public void addProducerConfigEntry(KeyValuePair entry) {
-        if (!KNOWN_PRODUCER_CONFIG_KEYS.contains(entry.getKey()))
-            addWarn("The key \""+entry.getKey()+"\" is now a known kafka producer config key.");
-        this.producerConfig.put(entry.getKey(), entry.getValue());
-    }
 
     public void setDeliveryStrategy(DeliveryStrategy<E> deliveryStrategy) {
         this.deliveryStrategy = deliveryStrategy;
     }
 
-    public void setSendStrategy(String sendStrategyName) {
-        this.deliveryStrategy = DeliveryStrategy.KnownStrategies.forName(sendStrategyName);
-    }
 
 
 }

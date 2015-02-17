@@ -7,7 +7,7 @@
     </appender>
 
 
-    <appender name="kafkaAppender" class="com.github.danielwegener.logback.kafka.KafkaAppender">
+    <appender name="kafkaAppender" class="com.github.danielwegener.logback.kafka.KafkaAppenderBase">
        <encoder>
            <layout class="ch.qos.logback.classic.PatternLayout">
                <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>

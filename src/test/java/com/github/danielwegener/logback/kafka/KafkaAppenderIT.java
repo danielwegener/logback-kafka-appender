@@ -37,7 +37,7 @@ public class KafkaAppenderIT {
     public ErrorCollector collector= new ErrorCollector();
 
     private TestKafka kafka;
-    private KafkaAppender<ILoggingEvent> unit;
+    private KafkaAppenderBase<ILoggingEvent> unit;
 
     private LoggerContext loggerContext;
 
@@ -65,7 +65,7 @@ public class KafkaAppenderIT {
         });
         loggerContext.putProperty("HOSTNAME","localhost");
 
-        unit = new KafkaAppender<ILoggingEvent>();
+        unit = new KafkaAppenderBase<ILoggingEvent>();
         final PatternLayout patternLayout = new PatternLayout();
         patternLayout.setPattern("%m");
         unit.setEncoder(new PatternLayoutKafkaMessageEncoder(patternLayout, Charset.forName("UTF-8")));

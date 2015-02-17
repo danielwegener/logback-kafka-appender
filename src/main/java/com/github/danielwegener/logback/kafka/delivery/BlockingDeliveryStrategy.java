@@ -19,8 +19,8 @@ public class BlockingDeliveryStrategy<E> extends ContextAwareBase implements Del
             return true;
         }
         catch (InterruptedException e) { return false; }
-        catch (ExecutionException e) { BlockingDeliveryStrategy.this.addError("Exception during send.", e); }
-        catch (TimeoutException e) { BlockingDeliveryStrategy.this.addError("Timeout during send."); }
+        catch (ExecutionException e)  { addError("Exception during send.", e); }
+        catch (TimeoutException e) { addError("Timeout during send."); }
         return false;
     }
 

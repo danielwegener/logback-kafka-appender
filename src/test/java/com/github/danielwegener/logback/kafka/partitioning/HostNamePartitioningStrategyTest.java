@@ -19,14 +19,11 @@ public class HostNamePartitioningStrategyTest {
 
     private final LoggerContext ctx = new LoggerContext();
 
-    @Before
-    public void before() {
-        ctx.putProperty(CoreConstants.HOSTNAME_KEY, "localhost");
-        unit.setContext(ctx);
-    }
 
     @Test
     public void shouldPartitionByHostName() {
+        ctx.putProperty(CoreConstants.HOSTNAME_KEY, "localhost");
+        unit.setContext(ctx);
         final ILoggingEvent evt = new LoggingEvent("fqcn", ctx.getLogger("logger"), Level.ALL, "msg", null, new Object[0]);
         Assert.assertThat(unit.createKey(evt), Matchers.equalTo(ByteBuffer.allocate(4).putInt("localhost".hashCode()).array()));
     }
