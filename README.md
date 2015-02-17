@@ -2,7 +2,7 @@
 
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.danielwegener/logback-kafka-appender/badge.svg)](https://maven-badges.herokuapp.com/maven-central/io.logback-kafka-appender/logback-kafka-appender)
 [![Build Status](https://api.travis-ci.org/danielwegener/logback-kafka-appender.svg)](https://travis-ci.org/logback-kafka-appender/logback-kafka-appender)
-[![Coverage Status](https://img.shields.io/coveralls/logback-kafka-appender/logback-kafka-appender.svg)](https://coveralls.io/r/logback-kafka-appender/logback-kafka-appender)
+[![Coverage Status](https://img.shields.io/coveralls/danielwegener/logback-kafka-appender.svg)](https://coveralls.io/r/logback-kafka-appender/logback-kafka-appender)
 
 This logback appender supports direct logging to apache kafka.
 
