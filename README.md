@@ -66,7 +66,7 @@ Kafka ships with an `PatternLayoutKafkaEncoder` that works like a common `Patter
 
 The `PatternLayoutKafkaEncoder` takes a common `ch.qos.logback.core.Layout` as layout-parameter.
 
-You may also use any layout that is capable of laying out an `ILoggingEvent` like the [logstash-logback-encoder's layout](https://github.com/logstash/logstash-logback-encoder#usage).
+You may also use any layout that is capable of laying out an `ILoggingEvent` like the [logstash-logback-encoder's `LogstashLayout`](https://github.com/logstash/logstash-logback-encoder#usage).
 
 ### Custom Serialization
 
