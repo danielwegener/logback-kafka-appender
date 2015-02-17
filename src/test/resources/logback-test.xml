@@ -1,6 +1,6 @@
 <configuration>
 
-   <appender name="Kafkafkaf" class="com.github.danielwegener.logback.kafka.KafkaAppenderBase">
+   <!--<appender name="Kafkafkaf" class="com.github.danielwegener.logback.kafka.KafkaAppenderBase">
        <encoder class="com.github.danielwegener.logback.kafka.encoding.PatternLayoutKafkaMessageEncoder">
            <layout class="ch.qos.logback.classic.PatternLayout">
                <pattern>%msg</pattern>
@@ -15,7 +15,7 @@
     </appender>
     <logger name="IT" additivity="false" level="info">
         <appender-ref ref="Kafkafkaf"/>
-    </logger>
+    </logger>-->
 
 
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">

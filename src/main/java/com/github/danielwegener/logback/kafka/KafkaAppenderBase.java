@@ -43,7 +43,6 @@ public class KafkaAppenderBase<E extends ILoggingEvent> extends KafkaAppenderCon
     protected void append(E e) {
         final byte[] payload = encoder.doEncode(e);
         final byte[] key = partitioningStrategy.createKey(e);
-        producer.partitionsFor(topic);
         final ProducerRecord<byte[], byte[]> record = new ProducerRecord<byte[],byte[]>(topic, key, payload);
         deliveryStrategy.send(producer,record, e);
     }

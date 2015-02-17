@@ -113,6 +113,9 @@ public abstract class KafkaAppenderConfig<E> extends UnsynchronizedAppenderBase<
         this.producerConfig.put(key,value);
     }
 
+    public Map<String, Object> getProducerConfig() {
+        return producerConfig;
+    }
 
     public void setDeliveryStrategy(DeliveryStrategy<E> deliveryStrategy) {
         this.deliveryStrategy = deliveryStrategy;

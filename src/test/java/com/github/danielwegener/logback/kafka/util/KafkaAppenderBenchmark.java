@@ -9,6 +9,7 @@ import com.carrotsearch.junitbenchmarks.annotation.BenchmarkMethodChart;
 import com.carrotsearch.junitbenchmarks.annotation.LabelType;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestRule;
@@ -35,6 +36,7 @@ public class KafkaAppenderBenchmark {
 
     }
 
+    @Ignore
     @BenchmarkOptions(benchmarkRounds = 10, warmupRounds = 2, concurrency = 8)
     @Test
     public void benchmark() throws InterruptedException {
