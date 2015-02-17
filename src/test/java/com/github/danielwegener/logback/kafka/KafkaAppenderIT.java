@@ -20,6 +20,7 @@ import org.apache.kafka.clients.producer.ProducerConfig;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ErrorCollector;
@@ -82,6 +83,7 @@ public class KafkaAppenderIT {
     }
 
 
+    @Ignore
     @Test
     public void testLogging() throws InterruptedException {
         //org.slf4j.Logger exampleLogger = org.slf4j.LoggerFactory.getLogger("IT");

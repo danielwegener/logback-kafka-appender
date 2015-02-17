@@ -2,6 +2,7 @@ package com.github.danielwegener.logback.kafka;
 
 
 import ch.qos.logback.classic.Logger;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.LoggerFactory;
 
@@ -10,7 +11,8 @@ import org.slf4j.LoggerFactory;
  */
 public class Example {
 
-    @Test
+    @Ignore
+    @Test()
     public void doIt() {
         final Logger it = (Logger) LoggerFactory.getLogger("IT");
 

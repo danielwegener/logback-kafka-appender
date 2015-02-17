@@ -13,7 +13,13 @@ public class LoggerNamePartitioningStrategy implements PartitioningStrategy {
 
     @Override
     public byte[] createKey(ILoggingEvent e) {
-        return ByteBuffer.allocate(4).putInt(e.getThreadName().hashCode()).array();
+        final String loggerName;
+        if (e.getLoggerName() == null) {
+            loggerName = "";
+        } else {
+            loggerName = e.getLoggerName();
+        }
+        return ByteBuffer.allocate(4).putInt(loggerName.hashCode()).array();
     }
 
 }
