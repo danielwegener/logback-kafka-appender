@@ -5,19 +5,15 @@ import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.classic.spi.LoggingEvent;
 import ch.qos.logback.core.BasicStatusManager;
-import ch.qos.logback.core.encoder.Encoder;
 import ch.qos.logback.core.status.ErrorStatus;
-import ch.qos.logback.core.status.Status;
 import com.github.danielwegener.logback.kafka.delivery.DeliveryStrategy;
+import com.github.danielwegener.logback.kafka.delivery.FailedDeliveryCallback;
 import com.github.danielwegener.logback.kafka.encoding.KafkaMessageEncoder;
 import com.github.danielwegener.logback.kafka.partitioning.PartitioningStrategy;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
-import org.hamcrest.Matchers;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mockito;
 
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasItem;
@@ -39,7 +35,7 @@ public class KafkaAppenderBaseTest {
     private final KafkaMessageEncoder<ILoggingEvent> encoder =  mock(KafkaMessageEncoder.class);
     private final PartitioningStrategy partitioningStrategy =  mock(PartitioningStrategy.class);
     @SuppressWarnings("unchecked")
-    private final DeliveryStrategy<ILoggingEvent> deliveryStrategy =  mock(DeliveryStrategy.class);
+    private final DeliveryStrategy deliveryStrategy =  mock(DeliveryStrategy.class);
 
     @Before
     public void before() {
@@ -97,7 +93,7 @@ public class KafkaAppenderBaseTest {
         unit.start();
         final LoggingEvent evt = new LoggingEvent("fqcn",ctx.getLogger("logger"), Level.ALL, "message", null, new Object[0]);
         unit.append(evt);
-        verify(deliveryStrategy).send(any(KafkaProducer.class), any(ProducerRecord.class), eq(evt));
+        verify(deliveryStrategy).send(any(KafkaProducer.class), any(ProducerRecord.class), eq(evt), any(FailedDeliveryCallback.class));
     }
 
 }

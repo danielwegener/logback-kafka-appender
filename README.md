@@ -4,7 +4,8 @@
 [![Build Status](https://api.travis-ci.org/danielwegener/logback-kafka-appender.svg)](https://travis-ci.org/logback-kafka-appender/logback-kafka-appender)
 [![Coverage Status](https://img.shields.io/coveralls/danielwegener/logback-kafka-appender.svg)](https://coveralls.io/r/logback-kafka-appender/logback-kafka-appender)
 
-This logback appender supports direct logging to apache kafka.
+This appender provides a way for applications to publish their application logs to Apache Kafka.
+This is ideal for applications within immutable containers without a writable filesystem.
 
 
 ## Example
@@ -50,6 +51,25 @@ Add `logback-kafka-appender` and `logback-classic` as libraray dependencies to y
 ## Full configuration example
 
 TBD
+
+### Delivery strategies
+
+Direct logging over the network is not a trivial thing because it might be much more unreliable than the local file system
+and has a much bigger impact on the application performance when the transport has hiccups.
+
+You need essentially make a decision: Is it more important to push all logs to the remote Kafka or is it more important
+to keep the application running? Either of this decisions allows you to optimize for throughput.
+
+#### Fallback-Appender
+
+If, for whatever reason, the kafka-producer decides that it cannot publish a log message, the message could still be
+logged to a fallback appender (a `ConsoleAppender` on stderr would be a reasonable choice for that).
+
+Just add your fallback appenders as `appender-ref` to the `KafkaAppender` section in your `logback.xml`.
+
+Note that the `AsynchronousDeliveryStrategy` will reuse the producers IO-Thread to write the message onto the fallback appenders.
+Thus the fallback appenders should be reasonable fast.
+
 
 ### Producer tuning
 

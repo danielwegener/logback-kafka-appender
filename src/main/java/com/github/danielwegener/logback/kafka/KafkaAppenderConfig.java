@@ -1,6 +1,7 @@
 package com.github.danielwegener.logback.kafka;
 
 import ch.qos.logback.core.UnsynchronizedAppenderBase;
+import ch.qos.logback.core.spi.AppenderAttachable;
 import ch.qos.logback.core.status.ErrorStatus;
 import com.github.danielwegener.logback.kafka.delivery.BlockingDeliveryStrategy;
 import com.github.danielwegener.logback.kafka.delivery.DeliveryStrategy;
@@ -14,13 +15,13 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-public abstract class KafkaAppenderConfig<E> extends UnsynchronizedAppenderBase<E> {
+public abstract class KafkaAppenderConfig<E> extends UnsynchronizedAppenderBase<E> implements AppenderAttachable<E> {
 
     protected String topic = null;
 
     protected KafkaMessageEncoder<E> encoder = null;
     protected PartitioningStrategy partitioningStrategy = null;
-    protected DeliveryStrategy<? super E> deliveryStrategy;
+    protected DeliveryStrategy deliveryStrategy;
 
     public static final Set<String> KNOWN_PRODUCER_CONFIG_KEYS = new HashSet<String>();
     static {
@@ -81,7 +82,7 @@ public abstract class KafkaAppenderConfig<E> extends UnsynchronizedAppenderBase<
 
         if (deliveryStrategy == null) {
             addInfo("No sendStrategy set for the appender named [\""+name+"\"]. Using default Blocking strategy.");
-            deliveryStrategy = new BlockingDeliveryStrategy<E>();
+            deliveryStrategy = new BlockingDeliveryStrategy();
         }
 
         return errorFree;
@@ -117,7 +118,7 @@ public abstract class KafkaAppenderConfig<E> extends UnsynchronizedAppenderBase<
         return producerConfig;
     }
 
-    public void setDeliveryStrategy(DeliveryStrategy<E> deliveryStrategy) {
+    public void setDeliveryStrategy(DeliveryStrategy deliveryStrategy) {
         this.deliveryStrategy = deliveryStrategy;
     }
 

@@ -1,8 +1,11 @@
 package com.github.danielwegener.logback.kafka;
 
 import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.Appender;
 import ch.qos.logback.core.filter.Filter;
+import ch.qos.logback.core.spi.AppenderAttachableImpl;
 import ch.qos.logback.core.spi.FilterReply;
+import com.github.danielwegener.logback.kafka.delivery.FailedDeliveryCallback;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.KafkaException;
@@ -13,6 +16,7 @@ import org.slf4j.helpers.SubstituteLogger;
 
 import java.lang.reflect.Field;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 public class KafkaAppenderBase<E extends ILoggingEvent> extends KafkaAppenderConfig<E> {
@@ -36,6 +40,7 @@ public class KafkaAppenderBase<E extends ILoggingEvent> extends KafkaAppenderCon
     private static final String KAFKA_LOGGER_PREFIX = "org.apache.kafka.clients";
 
 
+    private final AppenderAttachableImpl<E> aai = new AppenderAttachableImpl<E>();
     private KafkaProducer<byte[], byte[]> producer = null;
 
 
@@ -44,8 +49,15 @@ public class KafkaAppenderBase<E extends ILoggingEvent> extends KafkaAppenderCon
         final byte[] payload = encoder.doEncode(e);
         final byte[] key = partitioningStrategy.createKey(e);
         final ProducerRecord<byte[], byte[]> record = new ProducerRecord<byte[],byte[]>(topic, key, payload);
-        deliveryStrategy.send(producer,record, e);
+        deliveryStrategy.send(producer,record, e, failedDeliveryCallback);
     }
+
+    private final FailedDeliveryCallback<E> failedDeliveryCallback = new FailedDeliveryCallback<E>() {
+        @Override
+        public void onFailedDelivery(E evt, Throwable throwable) {
+            aai.appendLoopOnAppenders(evt);
+        }
+    };
 
 
     @Override
@@ -99,4 +111,38 @@ public class KafkaAppenderBase<E extends ILoggingEvent> extends KafkaAppenderCon
         return super.isStarted();
     }
 
+    @Override
+    public void addAppender(Appender<E> newAppender) {
+        aai.addAppender(newAppender);
+    }
+
+    @Override
+    public Iterator<Appender<E>> iteratorForAppenders() {
+        return aai.iteratorForAppenders();
+    }
+
+    @Override
+    public Appender<E> getAppender(String name) {
+        return aai.getAppender(name);
+    }
+
+    @Override
+    public boolean isAttached(Appender<E> appender) {
+        return aai.isAttached(appender);
+    }
+
+    @Override
+    public void detachAndStopAllAppenders() {
+        aai.detachAndStopAllAppenders();
+    }
+
+    @Override
+    public boolean detachAppender(Appender<E> appender) {
+        return aai.detachAppender(appender);
+    }
+
+    @Override
+    public boolean detachAppender(String name) {
+        return aai.detachAppender(name);
+    }
 }

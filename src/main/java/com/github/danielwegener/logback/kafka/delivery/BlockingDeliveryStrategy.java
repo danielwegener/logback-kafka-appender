@@ -8,19 +8,19 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-public class BlockingDeliveryStrategy<E> extends ContextAwareBase implements DeliveryStrategy<E> {
+public class BlockingDeliveryStrategy extends ContextAwareBase implements DeliveryStrategy {
 
-    private long timeout;
+    private long timeout = 0L;
 
     @Override
-    public <K, V> boolean send(KafkaProducer<K, V> producer, ProducerRecord<K, V> record, E event) {
+    public <K, V, E> boolean send(KafkaProducer<K, V> producer, ProducerRecord<K, V> record, E event, FailedDeliveryCallback<E> failureCallback) {
         try {
             producer.send(record).get(timeout, TimeUnit.MILLISECONDS);
             return true;
         }
         catch (InterruptedException e) { return false; }
-        catch (ExecutionException e)  { addError("Exception during send.", e); }
-        catch (TimeoutException e) { addError("Timeout during send."); }
+        catch (ExecutionException e)  { failureCallback.onFailedDelivery(event, e); }
+        catch (TimeoutException e) { failureCallback.onFailedDelivery(event, e); }
         return false;
     }
 
