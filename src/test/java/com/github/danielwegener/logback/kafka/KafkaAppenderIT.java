@@ -16,13 +16,10 @@ import kafka.consumer.ConsumerIterator;
 import kafka.consumer.KafkaStream;
 import kafka.consumer.Whitelist;
 import kafka.javaapi.consumer.ConsumerConnector;
-import org.apache.kafka.clients.producer.MockProducer;
-import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerConfig;
+import org.hamcrest.Matchers;
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ErrorCollector;
@@ -31,6 +28,9 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.Properties;
 import java.util.Random;
+
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 
 public class KafkaAppenderIT {
@@ -67,14 +67,11 @@ public class KafkaAppenderIT {
         });
         loggerContext.putProperty("HOSTNAME","localhost");
 
-        unit = new KafkaAppenderBase<ILoggingEvent>() {
-            @Override
-            protected Producer<byte[], byte[]> createProducer() {
-                return new MockProducer();
-            }
-        };
+        unit = new KafkaAppenderBase<ILoggingEvent>();
         final PatternLayout patternLayout = new PatternLayout();
-        patternLayout.setPattern("%m");
+        patternLayout.setPattern("%msg");
+        patternLayout.setContext(loggerContext);
+        patternLayout.start();
         unit.setEncoder(new PatternLayoutKafkaMessageEncoder(patternLayout, Charset.forName("UTF-8")));
         unit.setTopic("logs");
         unit.setName("TestKafkaAppender");
@@ -90,20 +87,19 @@ public class KafkaAppenderIT {
     }
 
 
-    @Ignore
     @Test
     public void testLogging() throws InterruptedException {
-        //org.slf4j.Logger exampleLogger = org.slf4j.LoggerFactory.getLogger("IT");
 
         final Logger logger = loggerContext.getLogger("ROOT");
-        final LoggingEvent loggingEvent = new LoggingEvent("a.b.c.d", logger, Level.INFO, "message", null, new Object[0]);
+
         unit.start();
 
-        System.err.println("in test");
+        assertTrue("appender is started", unit.isStarted());
 
-        Assert.assertTrue("appender is started", unit.isStarted());
-        Thread.sleep(5000);
-        unit.append(loggingEvent);
+        for (int i = 0; i<1000; ++i) {
+            final LoggingEvent loggingEvent = new LoggingEvent("a.b.c.d", logger, Level.INFO, "message"+i, null, new Object[0]);
+            unit.append(loggingEvent);
+        }
 
         final Properties consumerProperties = new Properties();
         consumerProperties.put("metadata.broker.list", kafka.getBrokerList());
@@ -114,11 +110,12 @@ public class KafkaAppenderIT {
         final kafka.consumer.ConsumerConfig consumerConfig = new kafka.consumer.ConsumerConfig(consumerProperties);
         final ConsumerConnector javaConsumerConnector = Consumer.createJavaConsumerConnector(consumerConfig);
         final KafkaStream<byte[], byte[]> log = javaConsumerConnector.createMessageStreamsByFilter(new Whitelist("logs"),1).get(0);
-        ConsumerIterator<byte[], byte[]> iterator = log.iterator();
-        while (iterator.hasNext()) {
-            System.err.println(new String(iterator.next().message(), UTF8));
-        }
+        final ConsumerIterator<byte[], byte[]> iterator = log.iterator();
 
+        for (int i=0; i<1000; ++i) {
+            final String messageFromKafka = new String(iterator.next().message(), UTF8);
+            assertThat(messageFromKafka, Matchers.equalTo("message"+i));
+        }
 
     }
 
