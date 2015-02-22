@@ -6,8 +6,8 @@ import ch.qos.logback.core.status.ErrorStatus;
 import com.github.danielwegener.logback.kafka.delivery.BlockingDeliveryStrategy;
 import com.github.danielwegener.logback.kafka.delivery.DeliveryStrategy;
 import com.github.danielwegener.logback.kafka.encoding.KafkaMessageEncoder;
-import com.github.danielwegener.logback.kafka.partitioning.PartitioningStrategy;
-import com.github.danielwegener.logback.kafka.partitioning.RoundRobinPartitioningStrategy;
+import com.github.danielwegener.logback.kafka.keying.KeyingStrategy;
+import com.github.danielwegener.logback.kafka.keying.RoundRobinKeyingStrategy;
 import org.apache.kafka.clients.producer.ProducerConfig;
 
 import java.util.HashMap;
@@ -20,7 +20,7 @@ public abstract class KafkaAppenderConfig<E> extends UnsynchronizedAppenderBase<
     protected String topic = null;
 
     protected KafkaMessageEncoder<E> encoder = null;
-    protected PartitioningStrategy partitioningStrategy = null;
+    protected KeyingStrategy keyingStrategy = null;
     protected DeliveryStrategy deliveryStrategy;
 
     public static final Set<String> KNOWN_PRODUCER_CONFIG_KEYS = new HashSet<String>();
@@ -75,9 +75,9 @@ public abstract class KafkaAppenderConfig<E> extends UnsynchronizedAppenderBase<
             errorFree = false;
         }
 
-        if (partitioningStrategy == null) {
+        if (keyingStrategy == null) {
             addError("No partitionStrategy set for the appender named [\"" + name + "\"]. Using default RoundRobin strategy.");
-            partitioningStrategy = new RoundRobinPartitioningStrategy();
+            keyingStrategy = new RoundRobinKeyingStrategy();
         }
 
         if (deliveryStrategy == null) {
@@ -97,8 +97,8 @@ public abstract class KafkaAppenderConfig<E> extends UnsynchronizedAppenderBase<
         this.topic = topic;
     }
 
-    public void setPartitioningStrategy(PartitioningStrategy partitioningStrategy) {
-        this.partitioningStrategy = partitioningStrategy;
+    public void setKeyingStrategy(KeyingStrategy keyingStrategy) {
+        this.keyingStrategy = keyingStrategy;
     }
 
     public void addProducerConfig(String keyValue) {

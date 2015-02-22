@@ -54,21 +54,17 @@ TBD
 
 ### Delivery strategies
 
-Direct logging over the network is not a trivial thing because it might be much more unreliable than the local file system
-and has a much bigger impact on the application performance when the transport has hiccups.
+Direct logging over the network is not a trivial thing because it might be much less reliable than the local file system and has a much bigger impact on the application performance if the transport has hiccups.
 
-You need essentially make a decision: Is it more important to push all logs to the remote Kafka or is it more important
-to keep the application running? Either of this decisions allows you to optimize for throughput.
+You need make a essential decision: Is it more important to deliver all logs to the remote Kafka or is it more important to keep the application running smoothly? Either of this decisions allows you to tune this appender for throughput.
 
 #### Fallback-Appender
 
-If, for whatever reason, the kafka-producer decides that it cannot publish a log message, the message could still be
-logged to a fallback appender (a `ConsoleAppender` on stderr would be a reasonable choice for that).
+If, for whatever reason, the kafka-producer decides that it cannot publish a log message, the message could still be logged to a fallback appender (a `ConsoleAppender` on STDOUT or STDERR would be a reasonable choice for that).
 
-Just add your fallback appenders as `appender-ref` to the `KafkaAppender` section in your `logback.xml`.
+Just add your fallback appender(s) as `appender-ref` to the `KafkaAppender` section in your `logback.xml`. Every message that cannot be delivered to kafka will be written to these appenders eventually.
 
-Note that the `AsynchronousDeliveryStrategy` will reuse the producers IO-Thread to write the message onto the fallback appenders.
-Thus the fallback appenders should be reasonable fast.
+Note that the `AsynchronousDeliveryStrategy` will reuse the producers IO-Thread to write the message onto the fallback appenders. Thus the fallback appenders should be reasonable fast so it does not slow down.
 
 
 ### Producer tuning
@@ -76,17 +72,18 @@ Thus the fallback appenders should be reasonable fast.
 This appender uses the [_new_ kafka producer](https://kafka.apache.org/documentation.html#newproducerconfigs) introduced in kafka-0.8.2.
 It uses the producer default configuration.
 
-You may override any known kafka producer config with an `<producerConfig>Name=Value</producerConfig>` block (Note that the `boostrap.servers` config is mandatory).
+You may override any known kafka producer config with an `<producerConfig>Name=Value</producerConfig>` block (note that the `boostrap.servers` config is mandatory).
 This allows a lot of fine tuning potential (eg. with `batch.size`, `compression.type` and `linger.ms`).
 
 ## Serialization
 
 Kafka ships with an `PatternLayoutKafkaEncoder` that works like a common `PatternLayoutEncoder`
-(with the distinction that it creates kafka message payloads instead of appending to a `OutputStream`).
+(with the distinction that it creates kafka message payloads instead of appending to a synchronous `OutputStream`).
 
 The `PatternLayoutKafkaEncoder` takes a common `ch.qos.logback.core.Layout` as layout-parameter.
 
-You may also use any layout that is capable of laying out an `ILoggingEvent` like the [logstash-logback-encoder's `LogstashLayout`](https://github.com/logstash/logstash-logback-encoder#usage).
+This allows you to use any layout that is capable of laying out an `ILoggingEvent` like for example the
+[logstash-logback-encoder's `LogstashLayout`](https://github.com/logstash/logstash-logback-encoder#usage).
 
 ### Custom Serialization
 
@@ -125,8 +122,7 @@ Another implication is how evenly our log messages are distributed across all av
 between multiple brokers.
 
 The order may or may not be important, depending on the intended consumer-audience (e.g. a logstash indexer will reorder all message by its timestamp anyway).
-The kafka producer client uses a messages key as partitioner. Thus `logback-kafka-appender` supports
-the following partitioning strategies:
+The kafka producer client uses a messages key as partitioner. Thus `logback-kafka-appender` supports the following partitioning strategies:
 
 | Strategy   | Description  |
 |---|---|
@@ -136,15 +132,17 @@ the following partitioning strategies:
 | `ThreadNamePartitioningStrategy` |  This strategy uses the calling threads name as partitioning key. This ensures that all messages logged by the same thread will remain in the correct order for any consumer. But this strategy can lead to uneven log distribution for a small number of thread(-names) (compared to the number of partitions). |
 | `LoggerNamePartitioningStrategy` | * This strategy uses the logger name as partitioning key. This ensures that all messages logged by the same logger will remain in the correct order for any consumer. But this strategy can lead to uneven log distribution for a small number of distinct loggers (compared to the number of partitions). |
 
+
+
 ### Custom keying strategies
 
-If none of the above partitioners satisfies your requirements, you mal also implement your own partitioner by implementing a custom `PartitioningStrategy`:
+If none of the above partitioners satisfies your requirements, you can easily implement your own partitioner by implementing a custom `KeyingStrategy`:
 
 ```java
 package foo;
-com.github.danielwegener.logback.kafka.partitioning.PartitioningStrategy;
+com.github.danielwegener.logback.kafka.keying.KeyingStrategy;
 
-public class MyPartitioningStrategy implements PartitioningStrategy {
+public class LevelKeyingStrategy implements KeyingStrategy {
     @Override
     public byte[] createKey(ILoggingEvent e) {
         return ByteBuffer.allocate(4).putInt(e.getLevel()).array();

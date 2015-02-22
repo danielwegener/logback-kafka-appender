@@ -1,21 +1,19 @@
-package com.github.danielwegener.logback.kafka.partitioning;
+package com.github.danielwegener.logback.kafka.keying;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.classic.spi.LoggingEvent;
-import ch.qos.logback.core.CoreConstants;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 
 import java.nio.ByteBuffer;
 
 
-public class LoggerNamePartitioningStrategyTest {
+public class LoggerNameKeyingStrategyTest {
 
-    private final LoggerNamePartitioningStrategy unit = new LoggerNamePartitioningStrategy();
+    private final LoggerNameKeyingStrategy unit = new LoggerNameKeyingStrategy();
 
     private final LoggerContext ctx = new LoggerContext();
 

@@ -15,7 +15,7 @@
        </encoder>
 
         <topic>logs</topic>
-        <partitioningStrategy class="com.github.danielwegener.logback.kafka.partitioning.HostNamePartitioningStrategy" />
+        <partitioningStrategy class="com.github.danielwegener.logback.kafka.keying.HostNameKeyingStrategy" />
         <deliveryStrategy class="com.github.danielwegener.logback.kafka.delivery.BlockingDeliveryStrategy" />
 
         <producerConfig>bootstrap.servers=localhost:9092</producerConfig>

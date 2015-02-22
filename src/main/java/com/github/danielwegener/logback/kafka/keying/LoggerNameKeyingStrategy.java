@@ -1,4 +1,4 @@
-package com.github.danielwegener.logback.kafka.partitioning;
+package com.github.danielwegener.logback.kafka.keying;
 
 import ch.qos.logback.classic.spi.ILoggingEvent;
 
@@ -9,7 +9,7 @@ import java.nio.ByteBuffer;
  * same logger will remain in the correct order for any consumer.
  * But this strategy can lead to uneven log distribution for a small number of distinct loggers (compared to the number of partitions).
  */
-public class LoggerNamePartitioningStrategy implements PartitioningStrategy {
+public class LoggerNameKeyingStrategy implements KeyingStrategy {
 
     @Override
     public byte[] createKey(ILoggingEvent e) {

@@ -9,13 +9,15 @@ import ch.qos.logback.classic.spi.LoggingEvent;
 import ch.qos.logback.core.status.Status;
 import ch.qos.logback.core.status.StatusListener;
 import com.github.danielwegener.logback.kafka.encoding.PatternLayoutKafkaMessageEncoder;
-import com.github.danielwegener.logback.kafka.partitioning.RoundRobinPartitioningStrategy;
+import com.github.danielwegener.logback.kafka.keying.RoundRobinKeyingStrategy;
 import com.github.danielwegener.logback.kafka.util.TestKafka;
 import kafka.consumer.Consumer;
 import kafka.consumer.ConsumerIterator;
 import kafka.consumer.KafkaStream;
 import kafka.consumer.Whitelist;
 import kafka.javaapi.consumer.ConsumerConnector;
+import org.apache.kafka.clients.producer.MockProducer;
+import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.junit.After;
 import org.junit.Assert;
@@ -65,7 +67,12 @@ public class KafkaAppenderIT {
         });
         loggerContext.putProperty("HOSTNAME","localhost");
 
-        unit = new KafkaAppenderBase<ILoggingEvent>();
+        unit = new KafkaAppenderBase<ILoggingEvent>() {
+            @Override
+            protected Producer<byte[], byte[]> createProducer() {
+                return new MockProducer();
+            }
+        };
         final PatternLayout patternLayout = new PatternLayout();
         patternLayout.setPattern("%m");
         unit.setEncoder(new PatternLayoutKafkaMessageEncoder(patternLayout, Charset.forName("UTF-8")));
@@ -73,7 +80,7 @@ public class KafkaAppenderIT {
         unit.setName("TestKafkaAppender");
         unit.setContext(loggerContext);
         unit.addProducerConfigValue(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafka.getBrokerList());
-        unit.setPartitioningStrategy(new RoundRobinPartitioningStrategy());
+        unit.setKeyingStrategy(new RoundRobinKeyingStrategy());
     }
 
     @After

@@ -7,6 +7,7 @@ import ch.qos.logback.core.spi.AppenderAttachableImpl;
 import ch.qos.logback.core.spi.FilterReply;
 import com.github.danielwegener.logback.kafka.delivery.FailedDeliveryCallback;
 import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.KafkaException;
 import org.apache.kafka.common.network.Selector;
@@ -17,9 +18,13 @@ import org.slf4j.helpers.SubstituteLogger;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Map;
 
 public class KafkaAppenderBase<E extends ILoggingEvent> extends KafkaAppenderConfig<E> {
+
+    protected Producer<byte[], byte[]> createProducer() {
+        final ByteArraySerializer serializer = new ByteArraySerializer();
+        return new KafkaProducer<byte[], byte[]>(new HashMap<String, Object>(producerConfig), serializer, serializer);
+    }
 
     public KafkaAppenderBase() {
         addFilter(new Filter<E>() {
@@ -41,13 +46,13 @@ public class KafkaAppenderBase<E extends ILoggingEvent> extends KafkaAppenderCon
 
 
     private final AppenderAttachableImpl<E> aai = new AppenderAttachableImpl<E>();
-    private KafkaProducer<byte[], byte[]> producer = null;
+    private Producer<byte[], byte[]> producer = null;
 
 
     @Override
     protected void append(E e) {
         final byte[] payload = encoder.doEncode(e);
-        final byte[] key = partitioningStrategy.createKey(e);
+        final byte[] key = keyingStrategy.createKey(e);
         final ProducerRecord<byte[], byte[]> record = new ProducerRecord<byte[],byte[]>(topic, key, payload);
         deliveryStrategy.send(producer,record, e, failedDeliveryCallback);
     }
@@ -65,13 +70,13 @@ public class KafkaAppenderBase<E extends ILoggingEvent> extends KafkaAppenderCon
         // only error free appenders should be activated
         if (!checkPrerequisites()) return;
 
-        final ByteArraySerializer serializer = new ByteArraySerializer();
+
         final BlindLogger blindLogger = new BlindLogger("blind",getStatusManager());
 
         replaceSubstituteLoggers(KafkaProducer.class, "log", blindLogger);
         replaceSubstituteLoggers(Selector.class, "log", blindLogger);
 
-        producer = new  KafkaProducer<byte[], byte[]>(new HashMap<String, Object>(producerConfig), serializer, serializer);
+        producer = createProducer();
 
         super.start();
     }

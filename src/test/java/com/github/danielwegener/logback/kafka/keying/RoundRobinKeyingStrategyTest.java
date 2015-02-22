@@ -1,4 +1,4 @@
-package com.github.danielwegener.logback.kafka.partitioning;
+package com.github.danielwegener.logback.kafka.keying;
 
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import org.junit.Test;
@@ -9,9 +9,9 @@ import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertThat;
 
 
-public class RoundRobinPartitioningStrategyTest {
+public class RoundRobinKeyingStrategyTest {
 
-    private final RoundRobinPartitioningStrategy unit = new RoundRobinPartitioningStrategy();
+    private final RoundRobinKeyingStrategy unit = new RoundRobinKeyingStrategy();
 
     @Test
     public void shouldAlwaysReturnNull() {

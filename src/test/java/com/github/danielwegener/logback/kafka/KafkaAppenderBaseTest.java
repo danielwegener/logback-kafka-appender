@@ -9,7 +9,7 @@ import ch.qos.logback.core.status.ErrorStatus;
 import com.github.danielwegener.logback.kafka.delivery.DeliveryStrategy;
 import com.github.danielwegener.logback.kafka.delivery.FailedDeliveryCallback;
 import com.github.danielwegener.logback.kafka.encoding.KafkaMessageEncoder;
-import com.github.danielwegener.logback.kafka.partitioning.PartitioningStrategy;
+import com.github.danielwegener.logback.kafka.keying.KeyingStrategy;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.junit.Before;
@@ -33,7 +33,7 @@ public class KafkaAppenderBaseTest {
     private final LoggerContext ctx = new LoggerContext();
     @SuppressWarnings("unchecked")
     private final KafkaMessageEncoder<ILoggingEvent> encoder =  mock(KafkaMessageEncoder.class);
-    private final PartitioningStrategy partitioningStrategy =  mock(PartitioningStrategy.class);
+    private final KeyingStrategy keyingStrategy =  mock(KeyingStrategy.class);
     @SuppressWarnings("unchecked")
     private final DeliveryStrategy deliveryStrategy =  mock(DeliveryStrategy.class);
 
@@ -46,7 +46,7 @@ public class KafkaAppenderBaseTest {
         unit.setEncoder(encoder);
         unit.setTopic("topic");
         unit.addProducerConfig("bootstrap.servers=localhost:1234");
-        unit.setPartitioningStrategy(partitioningStrategy);
+        unit.setKeyingStrategy(keyingStrategy);
         unit.setDeliveryStrategy(deliveryStrategy);
         ctx.start();
     }
