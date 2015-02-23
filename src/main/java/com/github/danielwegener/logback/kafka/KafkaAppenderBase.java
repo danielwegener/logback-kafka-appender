@@ -73,29 +73,9 @@ public class KafkaAppenderBase<E extends ILoggingEvent> extends KafkaAppenderCon
 
         final BlindLogger blindLogger = new BlindLogger("blind",getStatusManager());
 
-        replaceSubstituteLoggers(KafkaProducer.class, "log", blindLogger);
-        replaceSubstituteLoggers(Selector.class, "log", blindLogger);
-
         producer = createProducer();
 
         super.start();
-    }
-
-    private static void replaceSubstituteLoggers(Class<?> clazz, String field, Logger temporaryDelegate) {
-        try {
-            final Field log = clazz.getDeclaredField(field);
-            log.setAccessible(true);
-            final Object maybeSubstituteLogger = log.get(null);
-
-            if (maybeSubstituteLogger instanceof SubstituteLogger) {
-                final SubstituteLogger substituteLogger = (SubstituteLogger) maybeSubstituteLogger;
-                substituteLogger.setDelegate(temporaryDelegate);
-            }
-        } catch (NoSuchFieldException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        }
     }
 
     @Override
