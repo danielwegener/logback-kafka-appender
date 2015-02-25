@@ -18,7 +18,7 @@ Add `logback-kafka-appender` and `logback-classic` as libraray dependencies to y
 <dependency>
     <groupId>com.github.danielwegener</groupId>
     <artifactId>logback-kafka-appender</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>0.0.1</version>
 </dependency>
 <dependency>
     <groupId>ch.qos.logback</groupId>
