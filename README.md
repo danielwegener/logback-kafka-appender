@@ -63,7 +63,7 @@ This is an example `logback.xml` that uses a common `PatternLayout` to encode a 
 
 ```
 
-You may also look at the [complete configuration examples](src/example/resource/logback.xml)
+You may also look at the [complete configuration examples](src/example/resources/logback.xml)
 
 ### Delivery strategies
 
