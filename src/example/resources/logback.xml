@@ -34,6 +34,8 @@
         <producerConfig>bootstrap.servers=localhost:9092</producerConfig>
         <!-- don't wait for a broker to ack the reception of a batch.  -->
         <producerConfig>acks=0</producerConfig>
+        <!-- wait up to 1000ms and collect log messages before sending them as a batch -->
+        <producerConfig>linger.ms=1000</producerConfig>
         <!-- even if the producer buffer runs full, do not block the application but start to drop messages -->
         <producerConfig>block.on.buffer.full=false</producerConfig>
         <!-- define a client-id that you use to identify yourself against the kafka broker -->
@@ -67,8 +69,6 @@
         <!-- restrict the size of the buffered batches to 8MB (default is 32MB) -->
         <producerConfig>buffer.memory=8388608</producerConfig>
 
-        <!-- wait up to 1000ms and collect log messages before sending them as a batch. -->
-        <producerConfig>linger.ms=1000</producerConfig>
         <!-- If the kafka broker is not online when we try to log, just block until it becomes available -->
         <producerConfig>metadata.fetch.timeout.ms=99999999999</producerConfig>
         <!-- define a client-id that you use to identify yourself against the kafka broker -->
