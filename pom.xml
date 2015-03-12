@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.github.danielwegener</groupId>
     <artifactId>logback-kafka-appender</artifactId>
-    <version>0.0.2-SNAPSHOT</version>
+    <version>0.0.2</version>
     <parent>
         <groupId>org.sonatype.oss</groupId>
         <artifactId>oss-parent</artifactId>
@@ -41,7 +41,7 @@
         <connection>scm:git:git@github.com:danielwegener/logback-kafka-appender.git</connection>
         <developerConnection>scm:git:git@github.com:danielwegener/logback-kafka-appender.git</developerConnection>
         <url>git@github.com:danielwegener/logback-kafka-appender.git</url>
-      <tag>HEAD</tag>
+      <tag>logback-kafka-appender-0.0.2</tag>
   </scm>
 
     <developers>
