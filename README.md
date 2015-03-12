@@ -1,7 +1,7 @@
 #logback-kafka-appender
 
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.danielwegener/logback-kafka-appender/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.danielwegener/logback-kafka-appender)
-[![Build Status](https://api.travis-ci.org/danielwegener/logback-kafka-appender.svg)](https://travis-ci.org/logback-kafka-appender/logback-kafka-appender)
+[![Build Status](https://api.travis-ci.org/danielwegener/logback-kafka-appender.svg)](https://travis-ci.org/danielwegener/logback-kafka-appender)
 [![Coverage Status](https://img.shields.io/coveralls/danielwegener/logback-kafka-appender.svg)](https://coveralls.io/r/danielwegener/logback-kafka-appender)
 
 This appender provides a way for applications to publish their application logs to Apache Kafka.
