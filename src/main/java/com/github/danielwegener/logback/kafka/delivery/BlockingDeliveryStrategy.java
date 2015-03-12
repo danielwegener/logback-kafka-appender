@@ -1,6 +1,7 @@
 package com.github.danielwegener.logback.kafka.delivery;
 
 import ch.qos.logback.core.spi.ContextAwareBase;
+import org.apache.kafka.clients.producer.BufferExhaustedException;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
@@ -30,6 +31,7 @@ public class BlockingDeliveryStrategy extends ContextAwareBase implements Delive
             return true;
         }
         catch (InterruptedException e) { return false; }
+        catch (BufferExhaustedException e) { failureCallback.onFailedDelivery(event, e); }
         catch (ExecutionException e)  { failureCallback.onFailedDelivery(event, e); }
         catch (CancellationException e)  { failureCallback.onFailedDelivery(event, e); }
         catch (TimeoutException e) { failureCallback.onFailedDelivery(event, e); }
