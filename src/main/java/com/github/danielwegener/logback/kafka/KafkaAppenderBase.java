@@ -71,8 +71,6 @@ public class KafkaAppenderBase<E extends ILoggingEvent> extends KafkaAppenderCon
         if (!checkPrerequisites()) return;
 
 
-        final BlindLogger blindLogger = new BlindLogger("blind",getStatusManager());
-
         producer = createProducer();
 
         super.start();
