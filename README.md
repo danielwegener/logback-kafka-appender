@@ -7,11 +7,9 @@
 This appender provides a way for applications to publish their application logs to Apache Kafka.
 This is ideal for applications within immutable containers without a writable filesystem.
 
+## Full configuration example
 
-## Example
-This is an example `logback.xml` that uses a common `PatternLayout` to encode a log message as a string.
-
-Add `logback-kafka-appender` and `logback-classic` as libraray dependencies to your project (maven example).
+Add `logback-kafka-appender` and `logback-classic` as library dependencies to your project (maven example).
 
 ```xml
 [pom.xml]
@@ -26,20 +24,38 @@ Add `logback-kafka-appender` and `logback-classic` as libraray dependencies to y
     <version>1.1.2</version>
 </dependency>
 ```
-
+This is an example `logback.xml` that uses a common `PatternLayout` to encode a log message as a string.
 
 ```xml
 [src/main/resources/logback.xml]
 <configuration>
-   <appender name="kafkaAppender" class="com.github.danielwegener.logback.kafka.KafkaAppender">
-       <encoder class="com.github.danielwegener.logback.kafka.encoding.PatternLayoutKafkaEncoder">
-           <layout class="ch.qos.logback.classic.PatternLayout">
-               <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
-           </layout>
-       </encoder>
-       <topic>logs</topic>
-       <producerConfig>bootstrap.servers=localhost:9092</producerConfig>
+
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
     </appender>
+
+    <!-- This is the kafkaAppender -->
+    <appender name="kafkaAppender" class="com.github.danielwegener.logback.kafka.KafkaAppender">
+            <encoder class="com.github.danielwegener.logback.kafka.encoding.PatternLayoutKafkaMessageEncoder">
+                <layout class="ch.qos.logback.classic.PatternLayout">
+                    <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+                </layout>
+            </encoder>
+            <topic>logs</topic>
+            <keyingStrategy class="com.github.danielwegener.logback.kafka.keying.RoundRobinKeyingStrategy" />
+            <deliveryStrategy class="com.github.danielwegener.logback.kafka.delivery.AsynchronousDeliveryStrategy" />
+
+            <!-- each <producerConfig> translates to regular kafka-client config (format: key=value) -->
+            <!-- producer configs are documented here: https://kafka.apache.org/documentation.html#newproducerconfigs -->
+            <!-- bootstrap.servers is the only mandatory producerConfig -->
+            <producerConfig>bootstrap.servers=localhost:9092</producerConfig>
+
+            <!-- this is the fallback appender if kafka is not available. -->
+            <appender-ref ref="STDOUT">
+        </appender>
+
     <root level="info">
         <appender-ref ref="kafkaAppender" />
     </root>
@@ -47,16 +63,23 @@ Add `logback-kafka-appender` and `logback-classic` as libraray dependencies to y
 
 ```
 
-
-## Full configuration example
-
-TBD
+You may also look at the [complete configuration examples](src/example/resource/logback.xml)
 
 ### Delivery strategies
 
 Direct logging over the network is not a trivial thing because it might be much less reliable than the local file system and has a much bigger impact on the application performance if the transport has hiccups.
 
 You need make a essential decision: Is it more important to deliver all logs to the remote Kafka or is it more important to keep the application running smoothly? Either of this decisions allows you to tune this appender for throughput.
+
+| Strategy   | Description  |
+|---|---|
+| `AsynchronousDeliveryStrategy` | Dispatches each log message to the `Kafka Producer`. If the delivery fails for some reasons, the message is dispatched to the fallback appenders. This DeliveryStrategy does block if the producers send buffer is full. To avoid even this blocking, enable the producerConfig `block.on.buffer.full=false`. All log messages that cannot be delivered fast enough will then go to the fallback appenders. |
+| `BlockingDeliveryStrategy` | Blocks each calling thread until the log message is actually delivered. __Warning: This strategy should not be used together with the producerConfig `linger.ms`__  |
+
+
+#### Custom delivery strategies
+
+You may also roll your own delivery strategy. Just extend `com.github.danielwegener.logback.kafka.delivery.DeliveryStrategy`.
 
 #### Fallback-Appender
 
@@ -102,14 +125,6 @@ public class MyEncoder extends KafkaMessageEncoderBase<ILoggingEvent> { //...
 ```
 
 You may also extend The `KafkaMessageEncoderBase` class that already implements the `ContextAware` and `Lifecycle` interfaces.
-
-## Delivery strategies
-
-TBD
-
-### Custom delivery strategies
-
-TBD
 
 
 ## Keying strategies / Partitioning

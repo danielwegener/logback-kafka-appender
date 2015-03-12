@@ -1,29 +1,87 @@
 <configuration>
 
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <target>System.out</target>
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+    <appender name="STDERR" class="ch.qos.logback.core.ConsoleAppender">
+        <target>System.err</target>
         <encoder>
             <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
         </encoder>
     </appender>
 
+    <!-- This example configuration is probably most unreliable under
+    failure conditions but wont block your application at all -->
+    <appender name="very-relaxed-and-fast-kafka-appender" class="com.github.danielwegener.logback.kafka.KafkaAppender">
+        <encoder class="com.github.danielwegener.logback.kafka.encoding.PatternLayoutKafkaMessageEncoder">
+            <layout class="ch.qos.logback.classic.PatternLayout">
+                <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+            </layout>
+        </encoder>
+        <topic>boring-logs</topic>
+        <!-- we don't care how the log messages will be partitioned  -->
+        <keyingStrategy class="com.github.danielwegener.logback.kafka.keying.RoundRobinKeyingStrategy" />
 
-    <appender name="kafkaAppender" class="com.github.danielwegener.logback.kafka.KafkaAppenderBase">
-       <encoder>
-           <layout class="ch.qos.logback.classic.PatternLayout">
-               <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
-           </layout>
-       </encoder>
+        <!-- use async delivery. the application threads are not blocked by logging -->
+        <deliveryStrategy class="com.github.danielwegener.logback.kafka.delivery.AsynchronousDeliveryStrategy" />
 
-        <topic>logs</topic>
-        <partitioningStrategy class="com.github.danielwegener.logback.kafka.keying.HostNameKeyingStrategy" />
-        <deliveryStrategy class="com.github.danielwegener.logback.kafka.delivery.BlockingDeliveryStrategy" />
-
+        <!-- each <producerConfig> translates to regular kafka-client config (format: key=value) -->
+        <!-- producer configs are documented here: https://kafka.apache.org/documentation.html#newproducerconfigs -->
+        <!-- bootstrap.servers is the only mandatory producerConfig -->
         <producerConfig>bootstrap.servers=localhost:9092</producerConfig>
+        <!-- don't wait for a broker to ack the reception of a batch.  -->
+        <producerConfig>acks=0</producerConfig>
+        <!-- even if the producer buffer runs full, do not block the application but start to drop messages -->
+        <producerConfig>block.on.buffer.full=false</producerConfig>
+        <!-- define a client-id that you use to identify yourself against the kafka broker -->
+        <producerConfig>client.id=${HOSTNAME}-${CONTEXT_NAME}-logback-relaxed</producerConfig>
+
+        <!-- there is no fallback <appender-ref>. If this appender cannot deliver, it will drop its messages. -->
     </appender>
 
+    <!-- This example configuration is more restrictive and will try to ensure that every message
+     is eventually delivered in an ordered fashion (as long the logging application stays alive) -->
+    <appender name="very-restrictive-kafka-appender" class="com.github.danielwegener.logback.kafka.KafkaAppender">
+        <encoder class="com.github.danielwegener.logback.kafka.encoding.PatternLayoutKafkaMessageEncoder">
+            <layout class="ch.qos.logback.classic.PatternLayout">
+                <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+            </layout>
+        </encoder>
 
-    <root level="info">
-        <appender-ref ref="STDOUT" />
-        <appender-ref ref="kafkaAppender" />
+        <topic>important-logs</topic>
+        <!-- ensure that every message sent by the executing host is partitioned to the same partition strategy -->
+        <keyingStrategy class="com.github.danielwegener.logback.kafka.keying.HostNameKeyingStrategy" />
+        <!-- block the logging application thread if the kafka appender cannot keep up with sending the log messages -->
+        <deliveryStrategy class="com.github.danielwegener.logback.kafka.delivery.BlockingDeliveryStrategy">
+            <!-- wait indefinitely until the kafka producer was able to send the message -->
+            <timeout>0</timeout>
+        </deliveryStrategy>
+
+        <!-- each <producerConfig> translates to regular kafka-client config (format: key=value) -->
+        <!-- producer configs are documented here: https://kafka.apache.org/documentation.html#newproducerconfigs -->
+        <!-- bootstrap.servers is the only mandatory producerConfig -->
+        <producerConfig>bootstrap.servers=localhost:9092</producerConfig>
+        <!-- restrict the size of the buffered batches to 8MB (default is 32MB) -->
+        <producerConfig>buffer.memory=8388608</producerConfig>
+
+        <!-- wait up to 1000ms and collect log messages before sending them as a batch. -->
+        <producerConfig>linger.ms=1000</producerConfig>
+        <!-- If the kafka broker is not online when we try to log, just block until it becomes available -->
+        <producerConfig>metadata.fetch.timeout.ms=99999999999</producerConfig>
+        <!-- define a client-id that you use to identify yourself against the kafka broker -->
+        <producerConfig>client.id=${HOSTNAME}-${CONTEXT_NAME}-logback-restrictive</producerConfig>
+        <!-- use gzip to compress each batch of log messages. valid values: none, gzip, snappy  -->
+        <producerConfig>compression.type=gzip</producerConfig>
+
+        <!-- Log every log message that could not be sent to kafka to STDERR -->
+        <appender-ref ref="STDERR"/>
+    </appender>
+
+    <root level="debug">
+        <appender-ref ref="very-relaxed-and-fast-kafka-appender" />
+        <appender-ref ref="very-restrictive-kafka-appender" />
     </root>
 </configuration>

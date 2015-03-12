@@ -5,6 +5,10 @@ import ch.qos.logback.core.Layout;
 
 import java.nio.charset.Charset;
 
+/**
+ * A KafkaMessageEncoder that can be configured with a {@link Layout} and a {@link Charset} and creates
+ * a serialized string for each logging event using the given layout.
+ */
 public class PatternLayoutKafkaMessageEncoder extends KafkaMessageEncoderBase<ILoggingEvent> {
 
     public PatternLayoutKafkaMessageEncoder() {
