@@ -38,6 +38,7 @@ This is an example `logback.xml` that uses a common `PatternLayout` to encode a 
 
     <!-- This is the kafkaAppender -->
     <appender name="kafkaAppender" class="com.github.danielwegener.logback.kafka.KafkaAppender">
+            <!-- This is the default encoder that encodes every log message to an utf8-encoded string  -->
             <encoder class="com.github.danielwegener.logback.kafka.encoding.PatternLayoutKafkaMessageEncoder">
                 <layout class="ch.qos.logback.classic.PatternLayout">
                     <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
@@ -100,17 +101,20 @@ This allows a lot of fine tuning potential (eg. with `batch.size`, `compression.
 
 ## Serialization
 
-Kafka ships with an `PatternLayoutKafkaEncoder` that works like a common `PatternLayoutEncoder`
-(with the distinction that it creates kafka message payloads instead of appending to a synchronous `OutputStream`).
+This module provides a `PatternLayoutKafkaEncoder` that works like a common `PatternLayoutEncoder`
+(with the distinction that it creates byte-arrays instead of appending them to a synchronous `OutputStream`).
 
-The `PatternLayoutKafkaEncoder` takes a common `ch.qos.logback.core.Layout` as layout-parameter.
+The `PatternLayoutKafkaEncoder` uses a regular `ch.qos.logback.core.Layout` as layout-parameter.
 
-This allows you to use any layout that is capable of laying out an `ILoggingEvent` like for example the
+This allows you to use any layout that is capable of laying out an `ILoggingEvent` like a well-known `PatternLayout` or for example the
 [logstash-logback-encoder's `LogstashLayout`](https://github.com/logstash/logstash-logback-encoder#usage).
 
 ### Custom Serialization
 
-TBD Just roll your own `KafkaMessageEncoder`. The interface is quite simple:
+If you want to write something different than string on your kafka logging topic, you may roll your encoding mechanism. A use case would be to
+to smaller message sizes and/or better serialization/deserialization performance on the producing or consuming side. Useful formats could be BSON, Avro or others.
+
+Just roll your own `KafkaMessageEncoder`. The interface is quite simple:
 
 ```java
 package com.github.danielwegener.logback.kafka.encoding;
@@ -124,7 +128,8 @@ Your encoder should be type-parameterized for any subtype of ILoggingEvent like 
 public class MyEncoder extends KafkaMessageEncoderBase<ILoggingEvent> { //...
 ```
 
-You may also extend The `KafkaMessageEncoderBase` class that already implements the `ContextAware` and `Lifecycle` interfaces.
+You may also extend The `KafkaMessageEncoderBase` class that already implements the `ContextAware` and `Lifecycle` interfaces
+and thus allows accessing the appender configuration and work with its lifecycle.
 
 
 ## Keying strategies / Partitioning
