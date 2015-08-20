@@ -88,7 +88,6 @@ public abstract class KafkaAppenderConfig<E> extends UnsynchronizedAppenderBase<
         return errorFree;
     }
 
-    /**  */
     public void setEncoder(KafkaMessageEncoder<E> layout) {
         this.encoder = layout;
     }

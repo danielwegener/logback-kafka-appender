@@ -10,7 +10,8 @@ public interface KeyingStrategy {
 
     /**
      * creates a byte array key for the given {@link ch.qos.logback.classic.spi.ILoggingEvent}
+     * @param e the logging event
      */
-    byte[] createKey(ILoggingEvent E);
+    byte[] createKey(ILoggingEvent e);
 
 }
