@@ -26,6 +26,7 @@ import org.junit.rules.ErrorCollector;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.util.Collections;
 import java.util.Properties;
 import java.util.Random;
 
@@ -116,6 +117,7 @@ public class KafkaAppenderIT {
             final String messageFromKafka = new String(iterator.next().message(), UTF8);
             assertThat(messageFromKafka, Matchers.equalTo("message"+i));
         }
+
 
     }
 

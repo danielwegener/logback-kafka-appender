@@ -1,9 +1,14 @@
 package com.github.danielwegener.logback.kafka.util;
 
+import kafka.consumer.Consumer;
+import kafka.javaapi.consumer.ConsumerConnector;
+import org.apache.kafka.clients.KafkaClient;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import java.util.Random;
 
 /**
  * @author Daniel Wegener (Holisticon AG)
@@ -13,6 +18,19 @@ public class TestKafka {
     private final EmbeddedZookeeper zookeeper;
     private final EmbeddedKafkaCluster kafkaCluster;
 
+    public ConsumerConnector createClient() {
+        return createClient(new Properties());
+    }
+
+    public ConsumerConnector createClient(Properties consumerProperties) {
+        consumerProperties.put("metadata.broker.list", getBrokerList());
+        consumerProperties.put("group.id", "simple-consumer-" + new Random().nextInt());
+        consumerProperties.put("auto.commit.enable","false");
+        consumerProperties.put("auto.offset.reset","smallest");
+        consumerProperties.put("zookeeper.connect", getZookeeperConnection());
+        final kafka.consumer.ConsumerConfig consumerConfig = new kafka.consumer.ConsumerConfig(consumerProperties);
+        return Consumer.createJavaConsumerConnector(consumerConfig);
+    }
 
 
     TestKafka(EmbeddedZookeeper zookeeper, EmbeddedKafkaCluster kafkaCluster) {
@@ -21,19 +39,24 @@ public class TestKafka {
     }
 
     public static TestKafka createTestKafka(int brokerCount) throws IOException, InterruptedException {
-        return createTestKafka(brokerCount, null);
+        final List<Integer> ports = new ArrayList<Integer>(brokerCount);
+        for (int i=0; i<brokerCount; ++i) {
+            ports.add(-1);
+        }
+        return createTestKafka(ports, null);
     }
 
-    public static TestKafka createTestKafka(int brokerCount, Properties properties) throws IOException, InterruptedException {
+    public static TestKafka createTestKafka(List<Integer> brokerPorts) throws IOException, InterruptedException {
+        return createTestKafka(brokerPorts, null);
+    }
+
+    public static TestKafka createTestKafka(List<Integer> brokerPorts, Properties properties) throws IOException, InterruptedException {
         if (properties == null) properties = new Properties();
         final EmbeddedZookeeper zk = new EmbeddedZookeeper(-1);
         zk.startup();
 
-        final List<Integer> kafkaPorts = new ArrayList<Integer>(brokerCount);
-        for (int i=0; i<brokerCount; ++i) {
-            kafkaPorts.add(-1);
-        }
-        final EmbeddedKafkaCluster kafka = new EmbeddedKafkaCluster(zk.getConnection(), properties, kafkaPorts);
+
+        final EmbeddedKafkaCluster kafka = new EmbeddedKafkaCluster(zk.getConnection(), properties, brokerPorts);
         kafka.startup();
         return new TestKafka(zk, kafka);
     }

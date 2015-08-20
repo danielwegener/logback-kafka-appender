@@ -1,6 +1,6 @@
 <configuration>
 
-   <!--<appender name="Kafkafkaf" class="com.github.danielwegener.logback.kafka.KafkaAppenderBase">
+   <appender name="KafkaAppender" class="com.github.danielwegener.logback.kafka.KafkaAppender">
        <encoder class="com.github.danielwegener.logback.kafka.encoding.PatternLayoutKafkaMessageEncoder">
            <layout class="ch.qos.logback.classic.PatternLayout">
                <pattern>%msg</pattern>
@@ -8,14 +8,14 @@
        </encoder>
 
         <topic>logs</topic>
-        <partitioningStrategy class="com.github.danielwegener.logback.kafka.partitioning.HostNamePartitioningStrategy" />
-        <deliveryStrategy class="com.github.danielwegener.logback.kafka.delivery.BlockingDeliveryStrategy" />
+        <keyingStrategy class="com.github.danielwegener.logback.kafka.keying.HostNameKeyingStrategy" />
+        <deliveryStrategy class="com.github.danielwegener.logback.kafka.delivery.AsynchronousDeliveryStrategy" />
 
         <producerConfig>bootstrap.servers=localhost:9092</producerConfig>
     </appender>
-    <logger name="IT" additivity="false" level="info">
-        <appender-ref ref="Kafkafkaf"/>
-    </logger>-->
+    <logger name="LogbackIntegrationIT" additivity="false" level="info">
+        <appender-ref ref="KafkaAppender"/>
+    </logger>
 
 
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
@@ -24,7 +24,7 @@
         </encoder>
     </appender>
 
-    <root level="info">
+    <root level="warn">
         <appender-ref ref="STDOUT" />
     </root>
 </configuration>
