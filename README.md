@@ -77,6 +77,30 @@ You need make a essential decision: Is it more important to deliver all logs to 
 | `AsynchronousDeliveryStrategy` | Dispatches each log message to the `Kafka Producer`. If the delivery fails for some reasons, the message is dispatched to the fallback appenders. This DeliveryStrategy does block if the producers send buffer is full. To avoid even this blocking, enable the producerConfig `block.on.buffer.full=false`. All log messages that cannot be delivered fast enough will then go to the fallback appenders. |
 | `BlockingDeliveryStrategy` | Blocks each calling thread until the log message is actually delivered. Normally this strategy is discouraged because it has a huge negative impact on throughput. __Warning: This strategy should not be used together with the producerConfig `linger.ms`__  |
 
+#### Note on Broker outages
+
+The `AsynchronousDeliveryStrategy` does not prevent you from being blocked by the Kafka metadata exchange. That means: If all brokers are not reachable when the logging context starts, or all brokers become unreachable for a longer time period (> `metadata.max.age.ms`), your appender will eventually block. This behavior is undesirable in general and may change with kafka-clients 0.9. Until then, you can wrap the KafkaAppender with logback's own AsyncAppender.
+
+An example configuration could look like this:
+
+```xml
+<configuration>
+
+    <!-- This is the kafkaAppender -->
+    <appender name="kafkaAppender" class="com.github.danielwegener.logback.kafka.KafkaAppender">
+    <!-- Kafka Appender configuration -->
+    </appender>
+
+    <appender name="ASYNC" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="kafkaAppender" />
+    </appender>
+
+    <root level="info">
+        <appender-ref ref="ASYNC" />
+    </root>
+</configuration>
+
+```
 
 #### Custom delivery strategies
 
