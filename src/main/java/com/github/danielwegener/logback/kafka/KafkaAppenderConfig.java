@@ -66,17 +66,17 @@ public abstract class KafkaAppenderConfig<E> extends UnsynchronizedAppenderBase<
         }
 
         if (topic == null) {
-            addStatus(new ErrorStatus("No topic set for the appender named [\"" + name + "\"].", this));
+            addError("No topic set for the appender named [\"" + name + "\"].");
             errorFree = false;
         }
 
         if (encoder == null) {
-            addStatus(new ErrorStatus("No encoder set for the appender named [\"" + name + "\"].", this));
+            addError("No encoder set for the appender named [\"" + name + "\"].");
             errorFree = false;
         }
 
         if (keyingStrategy == null) {
-            addError("No partitionStrategy set for the appender named [\"" + name + "\"]. Using default RoundRobin strategy.");
+            addInfo("No partitionStrategy set for the appender named [\"" + name + "\"]. Using default RoundRobin strategy.");
             keyingStrategy = new RoundRobinKeyingStrategy();
         }
 
