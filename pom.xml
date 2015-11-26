@@ -22,7 +22,7 @@
 
     <properties>
         <!--General stuff-->
-        <targetJdk>1.6</targetJdk>
+        <targetJdk>1.7</targetJdk>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.build.resourceEncoding>UTF-8</project.build.resourceEncoding>
         <encoding>UTF-8</encoding>
@@ -72,7 +72,7 @@
         <dependency>
             <groupId>org.apache.kafka</groupId>
             <artifactId>kafka-clients</artifactId>
-            <version>0.8.2.1</version>
+            <version>0.9.0.0</version>
         </dependency>
         <dependency>
             <groupId>ch.qos.logback</groupId>
@@ -83,7 +83,7 @@
         <dependency>
             <groupId>org.apache.kafka</groupId>
             <artifactId>kafka_2.11</artifactId>
-            <version>0.8.2.1</version>
+            <version>0.9.0.0</version>
             <scope>test</scope>
             <exclusions>
                 <exclusion>

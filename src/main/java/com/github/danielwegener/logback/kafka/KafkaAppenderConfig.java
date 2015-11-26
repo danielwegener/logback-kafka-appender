@@ -2,13 +2,12 @@ package com.github.danielwegener.logback.kafka;
 
 import ch.qos.logback.core.UnsynchronizedAppenderBase;
 import ch.qos.logback.core.spi.AppenderAttachable;
-import ch.qos.logback.core.status.ErrorStatus;
 import com.github.danielwegener.logback.kafka.delivery.BlockingDeliveryStrategy;
 import com.github.danielwegener.logback.kafka.delivery.DeliveryStrategy;
 import com.github.danielwegener.logback.kafka.encoding.KafkaMessageEncoder;
 import com.github.danielwegener.logback.kafka.keying.KeyingStrategy;
 import com.github.danielwegener.logback.kafka.keying.RoundRobinKeyingStrategy;
-import org.apache.kafka.clients.producer.ProducerConfig;
+import static org.apache.kafka.clients.producer.ProducerConfig.*;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -24,30 +23,38 @@ public abstract class KafkaAppenderConfig<E> extends UnsynchronizedAppenderBase<
     protected DeliveryStrategy deliveryStrategy;
 
     public static final Set<String> KNOWN_PRODUCER_CONFIG_KEYS = new HashSet<String>();
+    public static final Map<String,String> DEPRECATED_PRODUCER_CONFIG_KEYS = new HashMap<String, String>();
     static {
-        KNOWN_PRODUCER_CONFIG_KEYS.add(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG);
-        KNOWN_PRODUCER_CONFIG_KEYS.add(ProducerConfig.ACKS_CONFIG);
-        KNOWN_PRODUCER_CONFIG_KEYS.add(ProducerConfig.BATCH_SIZE_CONFIG);
-        KNOWN_PRODUCER_CONFIG_KEYS.add(ProducerConfig.BLOCK_ON_BUFFER_FULL_CONFIG);
-        KNOWN_PRODUCER_CONFIG_KEYS.add(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG);
-        KNOWN_PRODUCER_CONFIG_KEYS.add(ProducerConfig.BUFFER_MEMORY_CONFIG);
-        KNOWN_PRODUCER_CONFIG_KEYS.add(ProducerConfig.CLIENT_ID_CONFIG);
-        KNOWN_PRODUCER_CONFIG_KEYS.add(ProducerConfig.COMPRESSION_TYPE_CONFIG);
-        KNOWN_PRODUCER_CONFIG_KEYS.add(ProducerConfig.LINGER_MS_CONFIG);
-        KNOWN_PRODUCER_CONFIG_KEYS.add(ProducerConfig.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION);
-        KNOWN_PRODUCER_CONFIG_KEYS.add(ProducerConfig.MAX_REQUEST_SIZE_CONFIG);
-        KNOWN_PRODUCER_CONFIG_KEYS.add(ProducerConfig.METADATA_FETCH_TIMEOUT_CONFIG);
-        KNOWN_PRODUCER_CONFIG_KEYS.add(ProducerConfig.METADATA_MAX_AGE_CONFIG);
-        KNOWN_PRODUCER_CONFIG_KEYS.add(ProducerConfig.METRIC_REPORTER_CLASSES_CONFIG);
-        KNOWN_PRODUCER_CONFIG_KEYS.add(ProducerConfig.METRICS_NUM_SAMPLES_CONFIG);
-        KNOWN_PRODUCER_CONFIG_KEYS.add(ProducerConfig.METRICS_SAMPLE_WINDOW_MS_CONFIG);
-        KNOWN_PRODUCER_CONFIG_KEYS.add(ProducerConfig.RECEIVE_BUFFER_CONFIG);
-        KNOWN_PRODUCER_CONFIG_KEYS.add(ProducerConfig.RECONNECT_BACKOFF_MS_CONFIG);
-        KNOWN_PRODUCER_CONFIG_KEYS.add(ProducerConfig.RETRIES_CONFIG);
-        KNOWN_PRODUCER_CONFIG_KEYS.add(ProducerConfig.RETRY_BACKOFF_MS_CONFIG);
-        KNOWN_PRODUCER_CONFIG_KEYS.add(ProducerConfig.SEND_BUFFER_CONFIG);
-        KNOWN_PRODUCER_CONFIG_KEYS.add(ProducerConfig.TIMEOUT_CONFIG);
-        KNOWN_PRODUCER_CONFIG_KEYS.add(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG);
+        KNOWN_PRODUCER_CONFIG_KEYS.add(BOOTSTRAP_SERVERS_CONFIG);
+        KNOWN_PRODUCER_CONFIG_KEYS.add(METADATA_FETCH_TIMEOUT_CONFIG);
+        DEPRECATED_PRODUCER_CONFIG_KEYS.put(METADATA_FETCH_TIMEOUT_CONFIG, MAX_BLOCK_MS_CONFIG);
+        KNOWN_PRODUCER_CONFIG_KEYS.add(METADATA_MAX_AGE_CONFIG);
+        KNOWN_PRODUCER_CONFIG_KEYS.add(BATCH_SIZE_CONFIG);
+        KNOWN_PRODUCER_CONFIG_KEYS.add(BUFFER_MEMORY_CONFIG);
+        KNOWN_PRODUCER_CONFIG_KEYS.add(ACKS_CONFIG);
+        KNOWN_PRODUCER_CONFIG_KEYS.add(TIMEOUT_CONFIG);
+        DEPRECATED_PRODUCER_CONFIG_KEYS.put(METADATA_FETCH_TIMEOUT_CONFIG, REQUEST_TIMEOUT_MS_CONFIG);
+        KNOWN_PRODUCER_CONFIG_KEYS.add(LINGER_MS_CONFIG);
+        KNOWN_PRODUCER_CONFIG_KEYS.add(CLIENT_ID_CONFIG);
+        KNOWN_PRODUCER_CONFIG_KEYS.add(SEND_BUFFER_CONFIG);
+        KNOWN_PRODUCER_CONFIG_KEYS.add(RECEIVE_BUFFER_CONFIG);
+        KNOWN_PRODUCER_CONFIG_KEYS.add(MAX_REQUEST_SIZE_CONFIG);
+        KNOWN_PRODUCER_CONFIG_KEYS.add(RECONNECT_BACKOFF_MS_CONFIG);
+        KNOWN_PRODUCER_CONFIG_KEYS.add(BLOCK_ON_BUFFER_FULL_CONFIG);
+        DEPRECATED_PRODUCER_CONFIG_KEYS.put(METADATA_FETCH_TIMEOUT_CONFIG, null);
+        KNOWN_PRODUCER_CONFIG_KEYS.add(RETRIES_CONFIG);
+        KNOWN_PRODUCER_CONFIG_KEYS.add(RETRY_BACKOFF_MS_CONFIG);
+        KNOWN_PRODUCER_CONFIG_KEYS.add(COMPRESSION_TYPE_CONFIG);
+        KNOWN_PRODUCER_CONFIG_KEYS.add(METRICS_SAMPLE_WINDOW_MS_CONFIG);
+        KNOWN_PRODUCER_CONFIG_KEYS.add(METRICS_NUM_SAMPLES_CONFIG);
+        KNOWN_PRODUCER_CONFIG_KEYS.add(METRIC_REPORTER_CLASSES_CONFIG);
+        KNOWN_PRODUCER_CONFIG_KEYS.add(MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION);
+        KNOWN_PRODUCER_CONFIG_KEYS.add(KEY_SERIALIZER_CLASS_CONFIG);
+        KNOWN_PRODUCER_CONFIG_KEYS.add(VALUE_SERIALIZER_CLASS_CONFIG);
+        KNOWN_PRODUCER_CONFIG_KEYS.add(CONNECTIONS_MAX_IDLE_MS_CONFIG);
+        KNOWN_PRODUCER_CONFIG_KEYS.add(PARTITIONER_CLASS_CONFIG);
+        KNOWN_PRODUCER_CONFIG_KEYS.add(MAX_BLOCK_MS_CONFIG);
+        KNOWN_PRODUCER_CONFIG_KEYS.add(REQUEST_TIMEOUT_MS_CONFIG);
     }
 
     protected Map<String,Object> producerConfig = new HashMap<String, Object>();
@@ -59,8 +66,8 @@ public abstract class KafkaAppenderConfig<E> extends UnsynchronizedAppenderBase<
 
 
 
-        if (producerConfig.get(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG) == null) {
-            addError("No \"" + ProducerConfig.BOOTSTRAP_SERVERS_CONFIG + "\" set for the appender named [\""
+        if (producerConfig.get(BOOTSTRAP_SERVERS_CONFIG) == null) {
+            addError("No \"" + BOOTSTRAP_SERVERS_CONFIG + "\" set for the appender named [\""
                     + name + "\"].");
             errorFree = false;
         }
@@ -110,6 +117,16 @@ public abstract class KafkaAppenderConfig<E> extends UnsynchronizedAppenderBase<
     public void addProducerConfigValue(String key, Object value) {
         if (!KNOWN_PRODUCER_CONFIG_KEYS.contains(key))
             addWarn("The key \""+key+"\" is now a known kafka producer config key.");
+
+        if (DEPRECATED_PRODUCER_CONFIG_KEYS.containsKey(key)) {
+            final StringBuilder deprecationMessage =
+                    new StringBuilder("The key \""+key+"\" is deprectated in kafka and may be removed in a future version.");
+            if (DEPRECATED_PRODUCER_CONFIG_KEYS.get(key) != null) {
+                deprecationMessage.append(" Consider using key \"").append(DEPRECATED_PRODUCER_CONFIG_KEYS.get(key)).append("\" instead.");
+            }
+            addWarn(deprecationMessage.toString());
+        }
+
         this.producerConfig.put(key,value);
     }
 

@@ -2,6 +2,7 @@ package com.github.danielwegener.logback.kafka.util;
 
 import kafka.server.KafkaConfig;
 import kafka.server.KafkaServer;
+import scala.Some;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -88,7 +89,7 @@ public class EmbeddedKafkaCluster {
 
 
     private KafkaServer startBroker(Properties props) {
-        KafkaServer server = new KafkaServer(new KafkaConfig(props), new SystemTime());
+        KafkaServer server = new KafkaServer(new KafkaConfig(props), new SystemTime(), Some.apply("embedded-kafka-cluster"));
         server.startup();
         return server;
     }
