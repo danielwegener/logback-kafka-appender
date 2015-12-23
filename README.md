@@ -75,7 +75,7 @@ You need make a essential decision: Is it more important to deliver all logs to 
 | Strategy   | Description  |
 |---|---|
 | `AsynchronousDeliveryStrategy` | Dispatches each log message to the `Kafka Producer`. If the delivery fails for some reasons, the message is dispatched to the fallback appenders. This DeliveryStrategy does block if the producers send buffer is full. To avoid even this blocking, enable the producerConfig `block.on.buffer.full=false`. All log messages that cannot be delivered fast enough will then go to the fallback appenders. |
-| `BlockingDeliveryStrategy` | Blocks each calling thread until the log message is actually delivered. __Warning: This strategy should not be used together with the producerConfig `linger.ms`__  |
+| `BlockingDeliveryStrategy` | Blocks each calling thread until the log message is actually delivered. Normally this strategy is discouraged because it has a huge negative impact on throughput. __Warning: This strategy should not be used together with the producerConfig `linger.ms`__  |
 
 
 #### Custom delivery strategies
@@ -86,14 +86,16 @@ You may also roll your own delivery strategy. Just extend `com.github.danielwege
 
 If, for whatever reason, the kafka-producer decides that it cannot publish a log message, the message could still be logged to a fallback appender (a `ConsoleAppender` on STDOUT or STDERR would be a reasonable choice for that).
 
-Just add your fallback appender(s) as `appender-ref` to the `KafkaAppender` section in your `logback.xml`. Every message that cannot be delivered to kafka will be written to these appenders eventually.
+Just add your fallback appender(s) as logback `appender-ref` to the `KafkaAppender` section in your `logback.xml`. Every message that cannot be delivered to kafka will be written to _all_ defined `appender-ref`'s.
 
-Note that the `AsynchronousDeliveryStrategy` will reuse the producers IO-Thread to write the message onto the fallback appenders. Thus the fallback appenders should be reasonable fast so it does not slow down.
+Example: `<appender-ref ref="STDOUT">` while `STDOUT` is an defined appender.
+
+Note that the `AsynchronousDeliveryStrategy` will reuse the kafka producers io thread to write the message to the fallback appenders. Thus all fallback appenders should be reasonable fast so they does not slow down or break the kafka producer.
 
 
 ### Producer tuning
 
-This appender uses the [_new_ kafka producer](https://kafka.apache.org/082/documentation.html#newproducerconfigs) introduced in kafka-0.8.2.
+This appender uses the [kafka producer](https://kafka.apache.org/documentation.html#producerconfigs) introduced in kafka-0.8.2.
 It uses the producer default configuration.
 
 You may override any known kafka producer config with an `<producerConfig>Name=Value</producerConfig>` block (note that the `boostrap.servers` config is mandatory).
