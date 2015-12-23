@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 ## [0.0.5] - 2015-12-23
 ###Changed
 - Upgrade to kafka 0.9.0. This includes that __Java 6 is no longer supported__.
+- Using of deprecated kafka configuration is reported as logback warning. 
 
 ## [0.0.4] - 2015-11-28
 ### Changed
