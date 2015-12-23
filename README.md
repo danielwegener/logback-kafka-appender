@@ -93,7 +93,7 @@ Note that the `AsynchronousDeliveryStrategy` will reuse the producers IO-Thread 
 
 ### Producer tuning
 
-This appender uses the [_new_ kafka producer](https://kafka.apache.org/documentation.html#newproducerconfigs) introduced in kafka-0.8.2.
+This appender uses the [_new_ kafka producer](https://kafka.apache.org/082/documentation.html#newproducerconfigs) introduced in kafka-0.8.2.
 It uses the producer default configuration.
 
 You may override any known kafka producer config with an `<producerConfig>Name=Value</producerConfig>` block (note that the `boostrap.servers` config is mandatory).
@@ -134,7 +134,7 @@ and thus allows accessing the appender configuration and work with its lifecycle
 
 ## Keying strategies / Partitioning
 
-Kafka's scalability and ordering guarantees heavily rely on the concepts of partitions ([more details here](https://kafka.apache.org/documentation.html#introduction)).
+Kafka's scalability and ordering guarantees heavily rely on the concepts of partitions ([more details here](https://kafka.apache.org/082/documentation.html#introduction)).
 For application logging this means that we need to decide how we want to distribute our log messages over multiple kafka
 topic partitions. One implication of this decision is how messages are ordered when they are consumed from a
 arbitrary multi-partition consumer since kafka only provides a guaranteed read order only on each single partition.
