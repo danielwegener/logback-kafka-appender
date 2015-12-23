@@ -2,6 +2,8 @@
 All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
+
+## [0.0.5] - 2015-12-23
 ###Changed
 - Upgrade to kafka 0.9.0. This includes that __Java 6 is no longer supported__.
 
@@ -29,7 +31,8 @@ All notable changes to this project will be documented in this file.
 ## [0.0.1] - 2015-02-23
 - initial release
 
-[Unreleased]: https://github.com/danielwegener/logback-kafka-appender/compare/logback-kafka-appender-0.0.4...HEAD
+[Unreleased]: https://github.com/danielwegener/logback-kafka-appender/compare/logback-kafka-appender-0.0.5...HEAD
+[0.0.5]: https://github.com/danielwegener/logback-kafka-appender/compare/logback-kafka-appender-0.0.4...logback-kafka-appender-0.0.5
 [0.0.4]: https://github.com/danielwegener/logback-kafka-appender/compare/logback-kafka-appender-0.0.3...logback-kafka-appender-0.0.4
 [0.0.3]: https://github.com/danielwegener/logback-kafka-appender/compare/logback-kafka-appender-0.0.2...logback-kafka-appender-0.0.3
 [0.0.2]: https://github.com/danielwegener/logback-kafka-appender/compare/logback-kafka-appender-0.0.1...logback-kafka-appender-0.0.2
