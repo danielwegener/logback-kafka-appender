@@ -23,7 +23,7 @@ public class KafkaAppenderBase<E extends ILoggingEvent> extends KafkaAppenderCon
      */
     private static final String KAFKA_LOGGER_PREFIX = "org.apache.kafka.clients";
 
-    private LazyProducer lazyProducer = null;
+    protected LazyProducer lazyProducer = null;
     private final AppenderAttachableImpl<E> aai = new AppenderAttachableImpl<E>();
     private final ConcurrentLinkedQueue<E> queue = new ConcurrentLinkedQueue<E>();
     private final FailedDeliveryCallback<E> failedDeliveryCallback = new FailedDeliveryCallback<E>() {
