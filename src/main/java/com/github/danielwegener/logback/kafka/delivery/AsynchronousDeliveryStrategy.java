@@ -6,6 +6,9 @@ import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
 
+/**
+ * @since 0.0.1
+ */
 public class AsynchronousDeliveryStrategy implements DeliveryStrategy {
 
     @Override

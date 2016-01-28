@@ -4,6 +4,7 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.PatternLayout;
+import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.classic.spi.LoggingEvent;
 import ch.qos.logback.core.Layout;
 import org.hamcrest.Matchers;
@@ -15,11 +16,11 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-public class PatternLayoutKafkaMessageEncoderTest {
+public class LayoutKafkaMessageEncoderTest {
 
     private static final Charset UTF8 = Charset.forName("UTF-8");
     private final PatternLayout layout = new PatternLayout();
-    private final PatternLayoutKafkaMessageEncoder unit = new PatternLayoutKafkaMessageEncoder(layout, UTF8);
+    private final LayoutKafkaMessageEncoder<ILoggingEvent> unit = new LayoutKafkaMessageEncoder<ILoggingEvent>(layout, UTF8);
 
     @Test
     public void testStart() {

@@ -14,12 +14,15 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * @since 0.0.1
+ */
 public abstract class KafkaAppenderConfig<E> extends UnsynchronizedAppenderBase<E> implements AppenderAttachable<E> {
 
     protected String topic = null;
 
     protected KafkaMessageEncoder<E> encoder = null;
-    protected KeyingStrategy keyingStrategy = null;
+    protected KeyingStrategy<? super E> keyingStrategy = null;
     protected DeliveryStrategy deliveryStrategy;
 
     public static final Set<String> KNOWN_PRODUCER_CONFIG_KEYS = new HashSet<String>();
@@ -103,7 +106,7 @@ public abstract class KafkaAppenderConfig<E> extends UnsynchronizedAppenderBase<
         this.topic = topic;
     }
 
-    public void setKeyingStrategy(KeyingStrategy keyingStrategy) {
+    public void setKeyingStrategy(KeyingStrategy<? super E> keyingStrategy) {
         this.keyingStrategy = keyingStrategy;
     }
 

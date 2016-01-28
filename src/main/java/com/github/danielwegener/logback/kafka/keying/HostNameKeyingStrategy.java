@@ -1,6 +1,5 @@
 package com.github.danielwegener.logback.kafka.keying;
 
-import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.Context;
 import ch.qos.logback.core.CoreConstants;
 import ch.qos.logback.core.spi.ContextAwareBase;
@@ -11,8 +10,9 @@ import java.nio.ByteBuffer;
  * This strategy uses the HOSTNAME to partition the log messages to kafka.
  * This is useful because it ensures that all log messages issued by this host will remain in the correct order for any consumer.
  * But this strategy can lead to uneven log distribution for a small number of hosts (compared to the number of partitions).
+ * @since 0.0.1
  */
-public class HostNameKeyingStrategy extends ContextAwareBase implements KeyingStrategy {
+public class HostNameKeyingStrategy extends ContextAwareBase implements KeyingStrategy<Object> {
 
     private byte[] hostnameHash = null;
 
@@ -28,7 +28,7 @@ public class HostNameKeyingStrategy extends ContextAwareBase implements KeyingSt
     }
 
     @Override
-    public byte[] createKey(ILoggingEvent e) {
+    public byte[] createKey(Object e) {
         return hostnameHash;
     }
 }
