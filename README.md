@@ -203,10 +203,10 @@ A custom keying strategy may especially become handy when you want to use kafka'
 
 ## FAQ
 
-- Q: I want to log to different/multiple topics!<br>
+- __Q: I want to log to different/multiple topics!<br>__
   A: No problem, create an appender for each topic.
 
-- Q: I want my logs in the logstash json format!<br>
+- __Q: I want my logs in the logstash json format!<br>__
   A: Use the [`LogstashLayout` from logstash-logback-encoder](https://github.com/logstash/logstash-logback-encoder#encoder)<br>
   Example:
 ```xml
