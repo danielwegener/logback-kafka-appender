@@ -23,10 +23,10 @@ public class KafkaAppenderBase<E extends ILoggingEvent> extends KafkaAppenderCon
      */
     private static final String KAFKA_LOGGER_PREFIX = "org.apache.kafka.clients";
 
-    private LazyProducer lazyProducer = null;
+    protected LazyProducer lazyProducer = null;
     private final AppenderAttachableImpl<E> aai = new AppenderAttachableImpl<E>();
     private final ConcurrentLinkedQueue<E> queue = new ConcurrentLinkedQueue<E>();
-    private final FailedDeliveryCallback<E> failedDeliveryCallback = new FailedDeliveryCallback<E>() {
+    protected final FailedDeliveryCallback<E> failedDeliveryCallback = new FailedDeliveryCallback<E>() {
         @Override
         public void onFailedDelivery(E evt, Throwable throwable) {
             aai.appendLoopOnAppenders(evt);
@@ -137,7 +137,7 @@ public class KafkaAppenderBase<E extends ILoggingEvent> extends KafkaAppenderCon
      *
      * @see <a href="https://commons.apache.org/proper/commons-lang/javadocs/api-3.4/org/apache/commons/lang3/concurrent/LazyInitializer.html">LazyInitializer</a>
      */
-    private class LazyProducer {
+    protected class LazyProducer {
 
         private volatile Producer<byte[], byte[]> producer;
 
