@@ -5,6 +5,7 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 
 /**
  * Interface for DeliveryStrategies.
+ * @since 0.0.1
  */
 public interface DeliveryStrategy {
 

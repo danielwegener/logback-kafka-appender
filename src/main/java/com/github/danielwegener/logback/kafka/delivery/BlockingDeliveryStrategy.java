@@ -15,7 +15,7 @@ import java.util.concurrent.TimeoutException;
 /**
  * DeliveryStrategy that waits on the producer if the output buffer is full.
  * The wait timeout is configurable with {@link BlockingDeliveryStrategy#setTimeout(long)}
- *
+ * @since 0.0.1
  */
 public class BlockingDeliveryStrategy extends ContextAwareBase implements DeliveryStrategy {
 

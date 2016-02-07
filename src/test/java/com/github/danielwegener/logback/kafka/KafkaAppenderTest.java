@@ -25,13 +25,13 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
 
-public class KafkaAppenderBaseTest {
+public class KafkaAppenderTest {
 
-    private final KafkaAppenderBase<ILoggingEvent> unit = new KafkaAppenderBase<ILoggingEvent>();
+    private final KafkaAppender<ILoggingEvent> unit = new KafkaAppender<ILoggingEvent>();
     private final LoggerContext ctx = new LoggerContext();
     @SuppressWarnings("unchecked")
     private final KafkaMessageEncoder<ILoggingEvent> encoder =  mock(KafkaMessageEncoder.class);
-    private final KeyingStrategy keyingStrategy =  mock(KeyingStrategy.class);
+    private final KeyingStrategy<ILoggingEvent> keyingStrategy =  mock(KeyingStrategy.class);
     @SuppressWarnings("unchecked")
     private final DeliveryStrategy deliveryStrategy =  mock(DeliveryStrategy.class);
 

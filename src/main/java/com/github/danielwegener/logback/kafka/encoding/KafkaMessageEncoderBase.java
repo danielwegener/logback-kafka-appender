@@ -5,6 +5,7 @@ import ch.qos.logback.core.spi.LifeCycle;
 
 /**
  * A base class for {@link KafkaMessageEncoder}'s that are {@link ContextAwareBase} and have a {@link LifeCycle}
+ * @since 0.0.1
  */
 public abstract class KafkaMessageEncoderBase<E> extends ContextAwareBase implements KafkaMessageEncoder<E>, LifeCycle {
 

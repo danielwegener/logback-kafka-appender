@@ -39,7 +39,7 @@ This is an example `logback.xml` that uses a common `PatternLayout` to encode a 
     <!-- This is the kafkaAppender -->
     <appender name="kafkaAppender" class="com.github.danielwegener.logback.kafka.KafkaAppender">
             <!-- This is the default encoder that encodes every log message to an utf8-encoded string  -->
-            <encoder class="com.github.danielwegener.logback.kafka.encoding.PatternLayoutKafkaMessageEncoder">
+            <encoder class="com.github.danielwegener.logback.kafka.encoding.LayoutKafkaMessageEncoder">
                 <layout class="ch.qos.logback.classic.PatternLayout">
                     <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
                 </layout>
@@ -145,11 +145,13 @@ Just roll your own `KafkaMessageEncoder`. The interface is quite simple:
 ```java
 package com.github.danielwegener.logback.kafka.encoding;
 public interface KafkaMessageEncoder<E> {
-    byte[] doEncode(E loggingEvent);
+    byte[] doEncode(E event);
 }
 
 ```
-Your encoder should be type-parameterized for any subtype of ILoggingEvent like in
+
+Your encoder should be type-parameterized for any subtype of the type of event you want to support (typically `ILoggingEvent`) like in
+
 ```java
 public class MyEncoder extends KafkaMessageEncoderBase<ILoggingEvent> { //...
 ```
@@ -174,9 +176,9 @@ The kafka producer client uses a messages key as partitioner. Thus `logback-kafk
 |---|---|
 | `RoundRobinPartitioningStrategy` (default)   | Evenly distributes all written log messages over all available kafka partitions. This strategy may lead to unexpected read orders on clients.   |
 | `HostNamePartitioningStrategy` | This strategy uses the HOSTNAME to partition the log messages to kafka. This is useful because it ensures that all log messages issued by this host will remain in the correct order for any consumer. But this strategy can lead to uneven log distribution for a small number of hosts (compared to the number of partitions). |
-| `ContextNamePartitioningStrategy` |  This strategy uses logbacks CONTEXT_NAME to partition the log messages to kafka. This is ensures that all log messages logged by the same logging context will remain in the correct order for any consumer. But this strategy can lead to uneven log distribution for a small number of hosts (compared to the number of partitions).  |
-| `ThreadNamePartitioningStrategy` |  This strategy uses the calling threads name as partitioning key. This ensures that all messages logged by the same thread will remain in the correct order for any consumer. But this strategy can lead to uneven log distribution for a small number of thread(-names) (compared to the number of partitions). |
-| `LoggerNamePartitioningStrategy` | * This strategy uses the logger name as partitioning key. This ensures that all messages logged by the same logger will remain in the correct order for any consumer. But this strategy can lead to uneven log distribution for a small number of distinct loggers (compared to the number of partitions). |
+| `ContextNamePartitioningStrategy` |  This strategy uses logbacks CONTEXT_NAME to partition the log messages to kafka. This is ensures that all log messages logged by the same logging context will remain in the correct order for any consumer. But this strategy can lead to uneven log distribution for a small number of hosts (compared to the number of partitions). This strategy only works for `ILoggingEvents`. |
+| `ThreadNamePartitioningStrategy` |  This strategy uses the calling threads name as partitioning key. This ensures that all messages logged by the same thread will remain in the correct order for any consumer. But this strategy can lead to uneven log distribution for a small number of thread(-names) (compared to the number of partitions). This strategy only works for `ILoggingEvents`. |
+| `LoggerNamePartitioningStrategy` | * This strategy uses the logger name as partitioning key. This ensures that all messages logged by the same logger will remain in the correct order for any consumer. But this strategy can lead to uneven log distribution for a small number of distinct loggers (compared to the number of partitions). This strategy only works for `ILoggingEvents`. |
 
 
 
@@ -188,7 +190,7 @@ If none of the above partitioners satisfies your requirements, you can easily im
 package foo;
 com.github.danielwegener.logback.kafka.keying.KeyingStrategy;
 
-public class LevelKeyingStrategy implements KeyingStrategy {
+public class LevelKeyingStrategy implements KeyingStrategy<ILoggingEvent> {
     @Override
     public byte[] createKey(ILoggingEvent e) {
         return ByteBuffer.allocate(4).putInt(e.getLevel()).array();

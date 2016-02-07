@@ -8,7 +8,7 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.classic.spi.LoggingEvent;
 import ch.qos.logback.core.status.Status;
 import ch.qos.logback.core.status.StatusListener;
-import com.github.danielwegener.logback.kafka.encoding.PatternLayoutKafkaMessageEncoder;
+import com.github.danielwegener.logback.kafka.encoding.LayoutKafkaMessageEncoder;
 import com.github.danielwegener.logback.kafka.keying.RoundRobinKeyingStrategy;
 import com.github.danielwegener.logback.kafka.util.TestKafka;
 import kafka.consumer.Consumer;
@@ -26,7 +26,6 @@ import org.junit.rules.ErrorCollector;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.util.Collections;
 import java.util.Properties;
 import java.util.Random;
 
@@ -40,7 +39,7 @@ public class KafkaAppenderIT {
     public ErrorCollector collector= new ErrorCollector();
 
     private TestKafka kafka;
-    private KafkaAppenderBase<ILoggingEvent> unit;
+    private KafkaAppender<ILoggingEvent> unit;
 
     private LoggerContext loggerContext;
 
@@ -68,12 +67,12 @@ public class KafkaAppenderIT {
         });
         loggerContext.putProperty("HOSTNAME","localhost");
 
-        unit = new KafkaAppenderBase<ILoggingEvent>();
+        unit = new KafkaAppender<ILoggingEvent>();
         final PatternLayout patternLayout = new PatternLayout();
         patternLayout.setPattern("%msg");
         patternLayout.setContext(loggerContext);
         patternLayout.start();
-        unit.setEncoder(new PatternLayoutKafkaMessageEncoder(patternLayout, Charset.forName("UTF-8")));
+        unit.setEncoder(new LayoutKafkaMessageEncoder(patternLayout, Charset.forName("UTF-8")));
         unit.setTopic("logs");
         unit.setName("TestKafkaAppender");
         unit.setContext(loggerContext);
