@@ -127,12 +127,12 @@ This allows a lot of fine tuning potential (eg. with `batch.size`, `compression.
 
 ## Serialization
 
-This module provides a `PatternLayoutKafkaEncoder` that works like a common `PatternLayoutEncoder`
+This module provides a `LayoutKafkaMessageEncoder` that works like a common logback `LayoutWrappingEncoder`
 (with the distinction that it creates byte-arrays instead of appending them to a synchronous `OutputStream`).
 
-The `PatternLayoutKafkaEncoder` uses a regular `ch.qos.logback.core.Layout` as layout-parameter.
+The `LayoutKafkaMessageEncoder` uses a regular `ch.qos.logback.core.Layout` as layout-parameter.
 
-This allows you to use any layout that is capable of laying out an `ILoggingEvent` like a well-known `PatternLayout` or for example the
+This allows you to use any layout that is capable of laying out an `ILoggingEvent` or `IAccessEvent` like a well-known `PatternLayout` or for example the
 [logstash-logback-encoder's `LogstashLayout`](https://github.com/logstash/logstash-logback-encoder#usage).
 
 ### Custom Serialization
