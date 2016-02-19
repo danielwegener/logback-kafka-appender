@@ -3,6 +3,7 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 ###Changed
+- Fixed typos in logback warning messages emitted by `com.github.danielwegener.logback.kafka.KafkaAppenderConfig` (#28)
 
 ## [0.1.0] - 2016-02-07
 ###Changed
