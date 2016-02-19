@@ -119,11 +119,11 @@ public abstract class KafkaAppenderConfig<E> extends UnsynchronizedAppenderBase<
 
     public void addProducerConfigValue(String key, Object value) {
         if (!KNOWN_PRODUCER_CONFIG_KEYS.contains(key))
-            addWarn("The key \""+key+"\" is now a known kafka producer config key.");
+            addWarn("The key \""+key+"\" is not a known kafka producer config key.");
 
         if (DEPRECATED_PRODUCER_CONFIG_KEYS.containsKey(key)) {
             final StringBuilder deprecationMessage =
-                    new StringBuilder("The key \""+key+"\" is deprectated in kafka and may be removed in a future version.");
+                    new StringBuilder("The key \""+key+"\" is deprecated in kafka and may be removed in a future version.");
             if (DEPRECATED_PRODUCER_CONFIG_KEYS.get(key) != null) {
                 deprecationMessage.append(" Consider using key \"").append(DEPRECATED_PRODUCER_CONFIG_KEYS.get(key)).append("\" instead.");
             }
