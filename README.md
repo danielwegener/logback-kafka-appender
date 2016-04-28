@@ -121,7 +121,7 @@ Note that the `AsynchronousDeliveryStrategy` will reuse the kafka producers io t
 
 ### Producer tuning
 
-This appender uses the [kafka producer](https://kafka.apache.org/documentation.html#producerconfigs) introduced in kafka-0.8.2.
+This appender uses the [kafka producer](https://kafka.apache.org/documentation.html#producerconfigs) introduced in kafka-0.9.0.0.
 It uses the producer default configuration.
 
 You may override any known kafka producer config with an `<producerConfig>Name=Value</producerConfig>` block (note that the `boostrap.servers` config is mandatory).
