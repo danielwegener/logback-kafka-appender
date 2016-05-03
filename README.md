@@ -19,11 +19,13 @@ Add `logback-kafka-appender` and `logback-classic` as library dependencies to yo
     <groupId>com.github.danielwegener</groupId>
     <artifactId>logback-kafka-appender</artifactId>
     <version>0.1.0</version>
+    <scope>runtime</scope>
 </dependency>
 <dependency>
     <groupId>ch.qos.logback</groupId>
     <artifactId>logback-classic</artifactId>
     <version>1.1.2</version>
+    <scope>runtime</scope>
 </dependency>
 ```
 
