@@ -131,7 +131,7 @@ Just add your fallback appender(s) as logback `appender-ref` to the `KafkaAppend
 
 Example: `<appender-ref ref="STDOUT">` while `STDOUT` is an defined appender.
 
-Note that the `AsynchronousDeliveryStrategy` will reuse the kafka producers io thread to write the message to the fallback appenders. Thus all fallback appenders should be reasonable fast so they does not slow down or break the kafka producer.
+Note that the `AsynchronousDeliveryStrategy` will reuse the kafka producers io thread to write the message to the fallback appenders. Thus all fallback appenders should be reasonable fast so they do not slow down or break the kafka producer.
 
 
 ### Producer tuning
