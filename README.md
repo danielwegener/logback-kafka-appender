@@ -11,10 +11,10 @@ This is ideal for applications within immutable containers without a writable fi
 
 ## Full configuration example
 
-Add `logback-kafka-appender` and `logback-classic` as library dependencies to your project (maven example).
+Add `logback-kafka-appender` and `logback-classic` as library dependencies to your project.
 
 ```xml
-[pom.xml]
+[maven pom.xml]
 <dependency>
     <groupId>com.github.danielwegener</groupId>
     <artifactId>logback-kafka-appender</artifactId>
@@ -26,6 +26,13 @@ Add `logback-kafka-appender` and `logback-classic` as library dependencies to yo
     <version>1.1.2</version>
 </dependency>
 ```
+
+```scala
+// [build.sbt]
+libraryDependencies += "com.github.danielwegener" % "logback-kafka-appender" % "0.1.0"
+libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.1.7"
+```
+
 This is an example `logback.xml` that uses a common `PatternLayout` to encode a log message as a string.
 
 ```xml
@@ -68,6 +75,12 @@ This is an example `logback.xml` that uses a common `PatternLayout` to encode a 
 
 You may also look at the [complete configuration examples](src/example/resources/logback.xml)
 
+### Compatibility
+
+logback-kafka-appender depends on `org.apache.kafka:kafka-clients:0.9.0.0:jar`. It can append logs against a kafka broker with version 0.9.0.0 or higher.
+
+The dependency to kafka-clients is not shadowed and may be upgraded to a higher, binary compatible version, through dependency resolution.
+
 ### Delivery strategies
 
 Direct logging over the network is not a trivial thing because it might be much less reliable than the local file system and has a much bigger impact on the application performance if the transport has hiccups.
@@ -81,7 +94,7 @@ You need make a essential decision: Is it more important to deliver all logs to 
 
 #### Note on Broker outages
 
-The `AsynchronousDeliveryStrategy` does not prevent you from being blocked by the Kafka metadata exchange. That means: If all brokers are not reachable when the logging context starts, or all brokers become unreachable for a longer time period (> `metadata.max.age.ms`), your appender will eventually block. This behavior is undesirable in general and may change with kafka-clients 0.9. Until then, you can wrap the KafkaAppender with logback's own AsyncAppender.
+The `AsynchronousDeliveryStrategy` does not prevent you from being blocked by the Kafka metadata exchange. That means: If all brokers are not reachable when the logging context starts, or all brokers become unreachable for a longer time period (> `metadata.max.age.ms`), your appender will eventually block. This behavior is undesirable in general and can be migitated with kafka-clients 0.9 (see #16). Until then, you can wrap the KafkaAppender with logback's own AsyncAppender.
 
 An example configuration could look like this:
 
