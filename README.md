@@ -77,7 +77,7 @@ You may also look at the [complete configuration examples](src/example/resources
 
 ### Compatibility
 
-logback-kafka-appender depends on `org.apache.kafka:kafka-clients:0.9.0.0:jar`. It can append logs against a kafka broker with version 0.9.0.0 or higher.
+logback-kafka-appender depends on `org.apache.kafka:kafka-clients:0.9.0.0:jar`. It can append logs to a kafka broker with version 0.9.0.0 or higher.
 
 The dependency to kafka-clients is not shadowed and may be upgraded to a higher, binary compatible version, through dependency resolution.
 
