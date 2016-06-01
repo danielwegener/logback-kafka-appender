@@ -3,7 +3,6 @@ package com.github.danielwegener.logback.kafka;
 import ch.qos.logback.core.UnsynchronizedAppenderBase;
 import ch.qos.logback.core.spi.AppenderAttachable;
 import com.github.danielwegener.logback.kafka.delivery.AsynchronousDeliveryStrategy;
-import com.github.danielwegener.logback.kafka.delivery.BlockingDeliveryStrategy;
 import com.github.danielwegener.logback.kafka.delivery.DeliveryStrategy;
 import com.github.danielwegener.logback.kafka.encoding.KafkaMessageEncoder;
 import com.github.danielwegener.logback.kafka.keying.KeyingStrategy;
