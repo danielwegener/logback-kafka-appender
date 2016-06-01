@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 ###Changed
 - Fixed typos in logback warning messages emitted by `com.github.danielwegener.logback.kafka.KafkaAppenderConfig` (#28)
+- Switched default delivery strategy to `com.github.danielwegener.logback.kafka.delivery.AsynchronousDeliveryStrategy` as it is the [more sensible default](https://github.com/danielwegener/logback-kafka-appender/pull/32). 
 
 ## [0.1.0] - 2016-02-07
 ###Changed
