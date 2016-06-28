@@ -6,11 +6,12 @@
 [![Build Status](https://travis-ci.org/danielwegener/logback-kafka-appender.svg?branch=master)](https://travis-ci.org/danielwegener/logback-kafka-appender)
 [![Coverage Status](https://img.shields.io/coveralls/danielwegener/logback-kafka-appender.svg)](https://coveralls.io/r/danielwegener/logback-kafka-appender)
 
-## Logback incompatibility Warning 
-Due to a bug in logback-core ([LOGBACK-1158](http://jira.qos.ch/browse/LOGBACK-1158)), __logback-kafka-appender does not work with logback 1.1.7__. This bug will be fixed in the upcoming logback 1.1.8. Until 1.1.8 is release, we recommend to use version logback 1.1.6.
-
 This appender provides a way for applications to publish their application logs to Apache Kafka.
 This is ideal for applications within immutable containers without a writable filesystem.
+
+## Logback incompatibility Warning 
+Due to a bug in logback-core ([LOGBACK-1158](http://jira.qos.ch/browse/LOGBACK-1158)), __logback-kafka-appender does not work with logback 1.1.7__. This bug will be fixed in the upcoming logback 1.1.8. Until 1.1.8 is released, we recommend to use logback 1.1.6.
+
 
 ## Full configuration example
 
