@@ -190,8 +190,8 @@ arbitrary multi-partition consumer since kafka only provides a guaranteed read o
 Another implication is how evenly our log messages are distributed across all available partitions and therefore balanced
 between multiple brokers.
 
-The order may or may not be important, depending on the intended consumer-audience (e.g. a logstash indexer will reorder all message by its timestamp anyway).
-The kafka producer client uses a messages key as partitioner. Thus `logback-kafka-appender` supports the following partitioning strategies:
+The order of log messages may or may not be important, depending on the intended consumer-audience (e.g. a logstash indexer will reorder all message by its timestamp anyway).
+The kafka producer client uses a message key as partitioner. Thus `logback-kafka-appender` supports the following partitioning strategies:
 
 | Strategy   | Description  |
 |---|---|
@@ -209,7 +209,7 @@ If none of the above partitioners satisfies your requirements, you can easily im
 
 ```java
 package foo;
-com.github.danielwegener.logback.kafka.keying.KeyingStrategy;
+import com.github.danielwegener.logback.kafka.keying.KeyingStrategy;
 
 public class LevelKeyingStrategy implements KeyingStrategy<ILoggingEvent> {
     @Override
