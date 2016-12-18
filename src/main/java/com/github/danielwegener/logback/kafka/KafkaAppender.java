@@ -27,7 +27,8 @@ public class KafkaAppender<E> extends KafkaAppenderConfig<E> {
      */
     private static final String[] KAFKA_LOGGER_PREFIXES = new String[]{
             "org.apache.kafka.clients",
-            "org.apache.kafka.common.metrics"
+            "org.apache.kafka.common.metrics",
+            "org.apache.kafka.common.network"
     };
 
     private LazyProducer lazyProducer;
