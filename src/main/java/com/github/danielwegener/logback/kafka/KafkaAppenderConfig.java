@@ -67,8 +67,6 @@ public abstract class KafkaAppenderConfig<E> extends UnsynchronizedAppenderBase<
     protected boolean checkPrerequisites() {
         boolean errorFree = true;
 
-
-
         if (producerConfig.get(BOOTSTRAP_SERVERS_CONFIG) == null) {
             addError("No \"" + BOOTSTRAP_SERVERS_CONFIG + "\" set for the appender named [\""
                     + name + "\"].");

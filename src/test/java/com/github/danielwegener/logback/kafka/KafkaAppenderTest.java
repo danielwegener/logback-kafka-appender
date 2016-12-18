@@ -31,6 +31,7 @@ public class KafkaAppenderTest {
     private final LoggerContext ctx = new LoggerContext();
     @SuppressWarnings("unchecked")
     private final KafkaMessageEncoder<ILoggingEvent> encoder =  mock(KafkaMessageEncoder.class);
+    @SuppressWarnings("unchecked")
     private final KeyingStrategy<ILoggingEvent> keyingStrategy =  mock(KeyingStrategy.class);
     @SuppressWarnings("unchecked")
     private final DeliveryStrategy deliveryStrategy =  mock(DeliveryStrategy.class);
