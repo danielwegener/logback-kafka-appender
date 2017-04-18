@@ -1,4 +1,4 @@
-#logback-kafka-appender
+# logback-kafka-appender
 
 [![Join the chat at https://gitter.im/danielwegener/logback-kafka-appender](https://badges.gitter.im/danielwegener/logback-kafka-appender.svg)](https://gitter.im/danielwegener/logback-kafka-appender?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
