@@ -10,6 +10,7 @@ import ch.qos.logback.core.status.Status;
 import ch.qos.logback.core.status.StatusListener;
 import com.github.danielwegener.logback.kafka.encoding.LayoutKafkaMessageEncoder;
 import com.github.danielwegener.logback.kafka.keying.RoundRobinKeyingStrategy;
+import com.github.danielwegener.logback.kafka.producer.StrictProducerLifeCycleStrategy;
 import com.github.danielwegener.logback.kafka.util.TestKafka;
 import kafka.consumer.Consumer;
 import kafka.consumer.ConsumerIterator;
@@ -72,7 +73,7 @@ public class KafkaAppenderIT {
         patternLayout.setPattern("%msg");
         patternLayout.setContext(loggerContext);
         patternLayout.start();
-        unit.setEncoder(new LayoutKafkaMessageEncoder(patternLayout, Charset.forName("UTF-8")));
+        unit.setEncoder(new LayoutKafkaMessageEncoder<ILoggingEvent>(patternLayout, Charset.forName("UTF-8")));
         unit.setTopic("logs");
         unit.setName("TestKafkaAppender");
         unit.setContext(loggerContext);
@@ -82,18 +83,30 @@ public class KafkaAppenderIT {
 
     @After
     public void tearDown() {
+        unit.stop();
         kafka.shutdown();
         kafka.awaitShutdown();
     }
 
-
     @Test
     public void testLogging() throws InterruptedException {
-
         final Logger logger = loggerContext.getLogger("ROOT");
 
         unit.start();
 
+        logAndVerifyEvents(logger);
+    }
+
+    @Test
+    public void testLoggingWithStrictProducerLifeCycle() throws InterruptedException {
+        final Logger logger = loggerContext.getLogger("ROOT");
+        unit.setProducerLifeCycleStrategy(new StrictProducerLifeCycleStrategy());
+        unit.start();
+
+        logAndVerifyEvents(logger);
+    }
+
+    private void logAndVerifyEvents(Logger logger) {
         assertTrue("appender is started", unit.isStarted());
 
         for (int i = 0; i<1000; ++i) {
@@ -116,8 +129,6 @@ public class KafkaAppenderIT {
             final String messageFromKafka = new String(iterator.next().message(), UTF8);
             assertThat(messageFromKafka, Matchers.equalTo("message"+i));
         }
-
-
     }
 
     private static final Charset UTF8 = Charset.forName("UTF-8");
