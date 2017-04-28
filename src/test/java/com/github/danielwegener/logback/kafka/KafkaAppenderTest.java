@@ -19,16 +19,12 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasItem;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
@@ -133,8 +129,9 @@ public class KafkaAppenderTest {
     public void testDeferredAppendForUnavailableMetadata() {
         when(encoder.doEncode(any(ILoggingEvent.class))).thenReturn(new byte[]{0x00, 0x00});
         whenProducerHasNoMetadataAvailable();
+        unit.setDeferUntilMetadataAvailable(true);
         unit.start();
-        final LoggingEvent deferredEvent = new LoggingEvent("fqcn",ctx.getLogger("org.apache.kafka.clients.logger"), Level.ALL, "deferred message", null, new Object[0]);
+        final LoggingEvent deferredEvent = new LoggingEvent("fqcn",ctx.getLogger("logger"), Level.ALL, "deferred message", null, new Object[0]);
         unit.doAppend(deferredEvent);
         verify(deliveryStrategy, times(0)).send(any(KafkaProducer.class), any(ProducerRecord.class), eq(deferredEvent), any(FailedDeliveryCallback.class));
 
@@ -142,6 +139,30 @@ public class KafkaAppenderTest {
         final LoggingEvent evt = new LoggingEvent("fqcn",ctx.getLogger("logger"), Level.ALL, "message", null, new Object[0]);
         unit.doAppend(evt);
         verify(deliveryStrategy).send(any(KafkaProducer.class), any(ProducerRecord.class), eq(deferredEvent), any(FailedDeliveryCallback.class));
+        verify(deliveryStrategy).send(any(KafkaProducer.class), any(ProducerRecord.class), eq(evt), any(FailedDeliveryCallback.class));
+    }
+
+    @Test
+    public void testDiscardThreshold() {
+        when(encoder.doEncode(any(ILoggingEvent.class))).thenReturn(new byte[]{0x00, 0x00});
+
+        final int QUEUE_SIZE = 5;
+        int DISCARDING_THRESHOLD = 2;
+        int expectedNoOfAppends = QUEUE_SIZE - DISCARDING_THRESHOLD + 1;
+
+        unit.setDeferQueueCapacity(QUEUE_SIZE);
+        unit.setDiscardingThreshold(DISCARDING_THRESHOLD);
+        unit.start();
+        final LoggingEvent deferredEvent = new LoggingEvent("fqcn", ctx.getLogger("org.apache.kafka.clients.logger"), Level.ALL, "deferred message ", null, new Object[0]);
+        for (int i = 0; i < QUEUE_SIZE; ++i) {
+            unit.doAppend(deferredEvent);
+        }
+        verify(deliveryStrategy, times(0)).send(any(KafkaProducer.class), any(ProducerRecord.class), any(ILoggingEvent.class), any(FailedDeliveryCallback.class));
+
+        final LoggingEvent evt = new LoggingEvent("fqcn",ctx.getLogger("logger"), Level.ALL, "message", null, new Object[0]);
+        unit.doAppend(evt);
+
+        verify(deliveryStrategy, times(expectedNoOfAppends)).send(any(KafkaProducer.class), any(ProducerRecord.class), eq(deferredEvent), any(FailedDeliveryCallback.class));
         verify(deliveryStrategy).send(any(KafkaProducer.class), any(ProducerRecord.class), eq(evt), any(FailedDeliveryCallback.class));
     }
 

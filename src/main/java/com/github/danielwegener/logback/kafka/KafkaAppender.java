@@ -34,13 +34,15 @@ public class KafkaAppender extends KafkaAppenderBase<ILoggingEvent> {
     public static final int DEFAULT_QUEUE_SIZE = 256;
 
     // Queue size for deferred events.
-    private int queueSize = DEFAULT_QUEUE_SIZE;
+    private int deferQueueCapacity = DEFAULT_QUEUE_SIZE;
     private static final int UNDEFINED = -1;
 
     // When the queue capacity falls beneath the discarding threshold, events are either disgarded or sent to the
     // fallback appender.
     private int discardingThreshold = UNDEFINED;
+
     private boolean includeCallerData = false;
+    private boolean deferUntilMetadataAvailable = false;
 
     private ProducerLifeCycleStrategy<byte[], byte[]> producerLifeCycleStrategy = new LazyProducerLifeCycleStrategy(this);
     private BlockingQueue<ILoggingEvent> blockingQueue;
@@ -58,18 +60,18 @@ public class KafkaAppender extends KafkaAppenderBase<ILoggingEvent> {
         // only error free appenders should be activated
         if (!checkPrerequisites()) return;
 
-        if (queueSize < 1) {
-            addError("Invalid queue size [" + queueSize + "]");
+        if (deferQueueCapacity < 1) {
+            addError("Invalid queue size [" + deferQueueCapacity + "]");
             return;
         }
 
         if (discardingThreshold == UNDEFINED) {
-            discardingThreshold = queueSize / 5;
+            discardingThreshold = deferQueueCapacity / 5;
             addInfo("Setting discardingThreshold to " + discardingThreshold);
         }
 
 
-        blockingQueue = new ArrayBlockingQueue<ILoggingEvent>(queueSize);
+        blockingQueue = new ArrayBlockingQueue<ILoggingEvent>(deferQueueCapacity);
 
         producerLifeCycleStrategy.setProducerConfig(producerConfig);
         producerLifeCycleStrategy.start();
@@ -86,26 +88,73 @@ public class KafkaAppender extends KafkaAppenderBase<ILoggingEvent> {
         super.stop();
     }
 
+    /**
+     * Set the threshold for remaining queue capacity below which deferred events will be discarded (or forwarded to
+     * fallback appenders)
+     *
+     * @param discardingThreshold
+     */
     public void setDiscardingThreshold(int discardingThreshold) {
         this.discardingThreshold = discardingThreshold;
+    }
+
+    /**
+     * Set to defer appends to the queue until metadata is available.
+     *
+     * @param deferUntilMetadataAvailable
+     */
+    public void setDeferUntilMetadataAvailable(boolean deferUntilMetadataAvailable) {
+        this.deferUntilMetadataAvailable = deferUntilMetadataAvailable;
+    }
+
+    public boolean isDeferUntilMetadataAvailable() {
+        return deferUntilMetadataAvailable;
+    }
+
+    /**
+     * Set the capacity of the queue used for deferred appends.
+     *
+     * Since the queue is initialized on startup, this cannot be set after the appender is running.
+     *
+     * @param deferQueueCapacity
+     */
+    public void setDeferQueueCapacity(int deferQueueCapacity) {
+        if (isStarted()) {
+            addError("Queue size can not be set on started appender");
+            return;
+        }
+        this.deferQueueCapacity = deferQueueCapacity;
+    }
+
+    /**
+     * Set to include caller data when preparing deferred events for later processing (can be expensive).
+     *
+     * @param includeCallerData
+     */
+    public void setIncludeCallerData(boolean includeCallerData) {
+        this.includeCallerData = includeCallerData;
     }
 
     public boolean isIncludeCallerData() {
         return includeCallerData;
     }
 
-    public void setIncludeCallerData(boolean includeCallerData) {
-        this.includeCallerData = includeCallerData;
-    }
-
+    /**
+     * Set the producer lifecycle strategy for this appender.
+     *
+     * @param producerLifeCycleStrategy
+     */
     public void setProducerLifeCycleStrategy(ProducerLifeCycleStrategy<byte[], byte[]> producerLifeCycleStrategy) {
+        if (isStarted()) {
+            addError("Producer life cycle strategy can not be set on started appender");
+            return;
+        }
         this.producerLifeCycleStrategy = producerLifeCycleStrategy;
     }
 
     @Override
     protected void append(ILoggingEvent e) {
-        // events which are logged by Kafka client must be deferred to avoid recursion
-        if (isLoggedByKafkaClient(e) || !isMetadataAvailable()) {
+        if (isDeferred(e)) {
             deferAppend(e);
         } else {
             // ensure the delivery of deferred events prior to that of subsequent events
@@ -113,6 +162,27 @@ public class KafkaAppender extends KafkaAppenderBase<ILoggingEvent> {
 
             encodeAndDeliver(e);
         }
+    }
+
+    private boolean isDeferred(ILoggingEvent e) {
+        // Events which are produced before startup (eg with StrictProducerLifeCycleStrategy) are deferred to avoid
+        // warnings from logback.
+        if (!isStarted()) {
+            return true;
+        }
+
+        // Events which are logged by Kafka client must be deferred to avoid recursion and runaway self-feeding
+        // effects.
+        if (isLoggedByKafkaClient(e)) {
+            return true;
+        }
+
+        // If there is no metadata available we (optionally) defer the append to avoid blocking on the logging threads
+        if (deferUntilMetadataAvailable && !isMetadataAvailable()) {
+            return true;
+        }
+
+        return false;
     }
 
     @Override

@@ -4,6 +4,7 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.PatternLayout;
+import ch.qos.logback.classic.joran.JoranConfigurator;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.classic.spi.LoggingEvent;
 import ch.qos.logback.core.status.Status;
@@ -86,6 +87,7 @@ public class KafkaAppenderIT {
         unit.stop();
         kafka.shutdown();
         kafka.awaitShutdown();
+        loggerContext.reset();
     }
 
     @Test
@@ -101,6 +103,25 @@ public class KafkaAppenderIT {
     public void testLoggingWithStrictProducerLifeCycle() throws InterruptedException {
         final Logger logger = loggerContext.getLogger("ROOT");
         unit.setProducerLifeCycleStrategy(new StrictProducerLifeCycleStrategy());
+        unit.start();
+
+        logAndVerifyEvents(logger);
+    }
+
+    @Test
+    public void testLoggingDeferUntilMetadata() throws InterruptedException {
+        final Logger logger = loggerContext.getLogger("ROOT");
+        unit.setDeferUntilMetadataAvailable(true);
+        unit.start();
+
+        logAndVerifyEvents(logger);
+    }
+
+    @Test
+    public void testLoggingWithStrictProducerLifeCycleDeferUntilMetadata() throws InterruptedException {
+        final Logger logger = loggerContext.getLogger("ROOT");
+        unit.setProducerLifeCycleStrategy(new StrictProducerLifeCycleStrategy());
+        unit.setDeferUntilMetadataAvailable(true);
         unit.start();
 
         logAndVerifyEvents(logger);
