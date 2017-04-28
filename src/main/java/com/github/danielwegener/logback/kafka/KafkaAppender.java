@@ -1,24 +1,21 @@
 package com.github.danielwegener.logback.kafka;
 
+import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.spi.ILoggingEvent;
-import ch.qos.logback.core.Appender;
-import ch.qos.logback.core.spi.AppenderAttachableImpl;
-import com.github.danielwegener.logback.kafka.delivery.FailedDeliveryCallback;
-import org.apache.kafka.clients.producer.KafkaProducer;
-import org.apache.kafka.clients.producer.Producer;
+import com.github.danielwegener.logback.kafka.producer.LazyProducerLifeCycleStrategy;
+import com.github.danielwegener.logback.kafka.producer.ProducerLifeCycleStrategy;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
-import org.apache.kafka.common.KafkaException;
 import org.apache.kafka.common.serialization.ByteArraySerializer;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * @since 0.0.1
  */
-public class KafkaAppender<E> extends KafkaAppenderConfig<E> {
+public class KafkaAppender extends KafkaAppenderBase<ILoggingEvent> {
 
     /**
      * Kafka clients use these prefixes for slf4j logging.
@@ -31,15 +28,24 @@ public class KafkaAppender<E> extends KafkaAppenderConfig<E> {
             "org.apache.kafka.common.network"
     };
 
-    private LazyProducer lazyProducer;
-    private final AppenderAttachableImpl<E> aai = new AppenderAttachableImpl<E>();
-    private final ConcurrentLinkedQueue<E> queue = new ConcurrentLinkedQueue<E>();
-    private final FailedDeliveryCallback<E> failedDeliveryCallback = new FailedDeliveryCallback<E>() {
-        @Override
-        public void onFailedDelivery(E evt, Throwable throwable) {
-            aai.appendLoopOnAppenders(evt);
-        }
-    };
+    /**
+     * The default queue size for deferred events.
+     */
+    public static final int DEFAULT_QUEUE_SIZE = 256;
+
+    // Queue size for deferred events.
+    private int queueSize = DEFAULT_QUEUE_SIZE;
+    private static final int UNDEFINED = -1;
+
+    // When the queue capacity falls beneath the discarding threshold, events are either disgarded or sent to the
+    // fallback appender.
+    private int discardingThreshold = UNDEFINED;
+    private boolean includeCallerData = false;
+
+    private ProducerLifeCycleStrategy<byte[], byte[]> producerLifeCycleStrategy = new LazyProducerLifeCycleStrategy(this);
+    private BlockingQueue<ILoggingEvent> blockingQueue;
+    private final ReentrantLock metadataAvailableLock = new ReentrantLock();
+    private volatile boolean metadataAvailable = false;
 
     public KafkaAppender() {
         // setting these as config values sidesteps an unnecessary warning (minor bug in KafkaProducer)
@@ -52,63 +58,54 @@ public class KafkaAppender<E> extends KafkaAppenderConfig<E> {
         // only error free appenders should be activated
         if (!checkPrerequisites()) return;
 
-        lazyProducer = new LazyProducer();
+        if (queueSize < 1) {
+            addError("Invalid queue size [" + queueSize + "]");
+            return;
+        }
+
+        if (discardingThreshold == UNDEFINED) {
+            discardingThreshold = queueSize / 5;
+            addInfo("Setting discardingThreshold to " + discardingThreshold);
+        }
+
+
+        blockingQueue = new ArrayBlockingQueue<ILoggingEvent>(queueSize);
+
+        producerLifeCycleStrategy.setProducerConfig(producerConfig);
+        producerLifeCycleStrategy.start();
 
         super.start();
     }
 
     @Override
     public void stop() {
-        super.stop();
-        if (lazyProducer != null && lazyProducer.isInitialized()) {
-            try {
-                lazyProducer.get().close();
-            } catch (KafkaException e) {
-                this.addWarn("Failed to shut down kafka producer: " + e.getMessage(), e);
-            }
-            lazyProducer = null;
+        if (producerLifeCycleStrategy != null && producerLifeCycleStrategy.isStarted()) {
+            ensureDeferredAppends();
+            producerLifeCycleStrategy.stop();
         }
+        super.stop();
+    }
+
+    public void setDiscardingThreshold(int discardingThreshold) {
+        this.discardingThreshold = discardingThreshold;
+    }
+
+    public boolean isIncludeCallerData() {
+        return includeCallerData;
+    }
+
+    public void setIncludeCallerData(boolean includeCallerData) {
+        this.includeCallerData = includeCallerData;
+    }
+
+    public void setProducerLifeCycleStrategy(ProducerLifeCycleStrategy<byte[], byte[]> producerLifeCycleStrategy) {
+        this.producerLifeCycleStrategy = producerLifeCycleStrategy;
     }
 
     @Override
-    public void addAppender(Appender<E> newAppender) {
-        aai.addAppender(newAppender);
-    }
-
-    @Override
-    public Iterator<Appender<E>> iteratorForAppenders() {
-        return aai.iteratorForAppenders();
-    }
-
-    @Override
-    public Appender<E> getAppender(String name) {
-        return aai.getAppender(name);
-    }
-
-    @Override
-    public boolean isAttached(Appender<E> appender) {
-        return aai.isAttached(appender);
-    }
-
-    @Override
-    public void detachAndStopAllAppenders() {
-        aai.detachAndStopAllAppenders();
-    }
-
-    @Override
-    public boolean detachAppender(Appender<E> appender) {
-        return aai.detachAppender(appender);
-    }
-
-    @Override
-    public boolean detachAppender(String name) {
-        return aai.detachAppender(name);
-    }
-
-    @Override
-    protected void append(E e) {
-        if (isLoggedByKafkaClient(e)) {
-            // events which are logged by Kafka client must be deferred to avoid recursion
+    protected void append(ILoggingEvent e) {
+        // events which are logged by Kafka client must be deferred to avoid recursion
+        if (isLoggedByKafkaClient(e) || !isMetadataAvailable()) {
             deferAppend(e);
         } else {
             // ensure the delivery of deferred events prior to that of subsequent events
@@ -118,74 +115,81 @@ public class KafkaAppender<E> extends KafkaAppenderConfig<E> {
         }
     }
 
-    protected Producer<byte[], byte[]> createProducer() {
-        return new KafkaProducer<byte[], byte[]>(new HashMap<String, Object>(producerConfig));
+    @Override
+    protected void preprocess(ILoggingEvent e) {
+        e.prepareForDeferredProcessing();
+        if (includeCallerData) {
+            e.getCallerData();
+        }
     }
 
-    private void encodeAndDeliver(E e) {
+    @Override
+    protected boolean isDiscardable(ILoggingEvent e) {
+        return Level.DEBUG.isGreaterOrEqual(e.getLevel());
+    }
+
+    private void encodeAndDeliver(ILoggingEvent e) {
         final byte[] payload = encoder.doEncode(e);
         final byte[] key = keyingStrategy.createKey(e);
         final ProducerRecord<byte[], byte[]> record = new ProducerRecord<byte[],byte[]>(topic, key, payload);
-        deliveryStrategy.send(lazyProducer.get(), record, e, failedDeliveryCallback);
+        deliveryStrategy.send(producerLifeCycleStrategy.getProducer(), record, e, failedDeliveryCallback);
     }
 
-    private void deferAppend(E event) {
-        queue.add(event);
+    private void deferAppend(ILoggingEvent event) {
+        if (isQueueBelowDiscardingThreshold()) {
+            if (isDiscardable(event)) {
+                return;
+            } else {
+                aai.appendLoopOnAppenders(event);
+                return;
+            }
+        }
+        preprocess(event);
+        put(event);
+    }
+
+    private boolean isQueueBelowDiscardingThreshold() {
+        return (blockingQueue.remainingCapacity() < discardingThreshold);
+    }
+
+    private void put(ILoggingEvent eventObject) {
+        try {
+            blockingQueue.put(eventObject);
+        } catch (InterruptedException ignored) {
+        }
     }
 
     // drains and delivers queued events
     private void ensureDeferredAppends() {
-        E event;
+        ILoggingEvent event;
 
-        while ((event = queue.poll()) != null) {
+        while ((event = blockingQueue.poll()) != null) {
             encodeAndDeliver(event);
         }
     }
 
-    private boolean isLoggedByKafkaClient(E e) {
-        if (e instanceof  ILoggingEvent) {
-            String loggerName = ((ILoggingEvent)e).getLoggerName();
-            for (String prefix: KAFKA_LOGGER_PREFIXES) {
-                if (loggerName.startsWith(prefix)) return true;
-            }
+    private boolean isLoggedByKafkaClient(ILoggingEvent e) {
+        final String loggerName = e.getLoggerName();
+        for (String prefix : KAFKA_LOGGER_PREFIXES) {
+            if (loggerName.startsWith(prefix)) return true;
         }
         return false;
     }
 
-    /**
-     * Lazy initializer for producer, patterned after commons-lang.
-     *
-     * @see <a href="https://commons.apache.org/proper/commons-lang/javadocs/api-3.4/org/apache/commons/lang3/concurrent/LazyInitializer.html">LazyInitializer</a>
-     */
-    private class LazyProducer {
-
-        private volatile Producer<byte[], byte[]> producer;
-
-        Producer<byte[], byte[]> get() {
-            Producer<byte[], byte[]> result = this.producer;
-            if (result == null) {
-                synchronized(this) {
-                    result = this.producer;
-                    if(result == null) {
-                        this.producer = result = this.initialize();
-                    }
-                }
-            }
-
-            return result;
+    private boolean isMetadataAvailable() {
+        if (!metadataAvailableLock.tryLock()) {
+            return metadataAvailable;
         }
 
-        Producer<byte[], byte[]> initialize() {
-            Producer<byte[], byte[]> producer = null;
-            try {
-                producer = createProducer();
-            } catch (Exception e) {
-                addError("error creating producer", e);
-            }
-            return producer;
+        try {
+            metadataAvailable = !producerLifeCycleStrategy.getProducer().partitionsFor(topic).isEmpty();
+        } catch (Exception ignored) {
+
+        } finally {
+            metadataAvailableLock.unlock();
         }
 
-        boolean isInitialized() { return producer != null; }
+        return metadataAvailable;
     }
 
 }
