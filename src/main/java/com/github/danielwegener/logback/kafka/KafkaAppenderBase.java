@@ -9,9 +9,6 @@ import java.util.Iterator;
 
 public abstract class KafkaAppenderBase<E> extends KafkaAppenderConfig<E> {
 
-    // Reentrancy guard preempts guard in UnsynchronizedAppenderBase to handle reentrant appends (if needed)
-    private ThreadLocal<Boolean> guard = new ThreadLocal<Boolean>();
-
     AppenderAttachableImpl<E> aai = new AppenderAttachableImpl<E>();
 
     FailedDeliveryCallback<E> failedDeliveryCallback = new FailedDeliveryCallback<E>() {
@@ -20,21 +17,6 @@ public abstract class KafkaAppenderBase<E> extends KafkaAppenderConfig<E> {
             aai.appendLoopOnAppenders(evt);
         }
     };
-
-    @Override
-    public void doAppend(E e) {
-        if (Boolean.TRUE.equals(guard.get()) && getFilterChainDecision(e) != FilterReply.DENY) {
-            doReentrantAppend(e);
-            return;
-        }
-
-        try {
-            guard.set(Boolean.TRUE);
-            super.doAppend(e);
-        } finally {
-            guard.set(Boolean.FALSE);
-        }
-    }
 
     @Override
     public void addAppender(Appender<E> newAppender) {
@@ -69,19 +51,6 @@ public abstract class KafkaAppenderBase<E> extends KafkaAppenderConfig<E> {
     @Override
     public boolean detachAppender(String name) {
         return aai.detachAppender(name);
-    }
-
-    /**
-     * Process reentrant logging events (ie logging events produced from doAppend).
-     *
-     * Great care must be taken implementing this to avoid a runaway snowball in the number of log messages, or
-     * other recursive gotchas.
-     *
-     * Presumably it is for this reason that the default behavior in logback is to discard reentrant messages.
-     * @param e
-     */
-    protected void doReentrantAppend(E e) {
-        // discard reentrant events by default (as is done with UnsynchronizedAppenderBase)
     }
 
     /**

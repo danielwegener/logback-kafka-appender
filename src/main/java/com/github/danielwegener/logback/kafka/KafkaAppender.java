@@ -154,16 +154,7 @@ public class KafkaAppender extends KafkaAppenderBase<ILoggingEvent> {
 
     @Override
     protected void append(ILoggingEvent e) {
-        deferOrAppend(e, false);
-    }
-
-    @Override
-    protected void doReentrantAppend(ILoggingEvent e) {
-        deferOrAppend(e, true);
-    }
-
-    private void deferOrAppend(ILoggingEvent e, boolean reentrant) {
-        if (isDeferred(e, reentrant)) {
+        if (isDeferred(e)) {
             deferAppend(e);
         } else {
             // ensure the delivery of deferred events prior to that of subsequent events
@@ -173,15 +164,10 @@ public class KafkaAppender extends KafkaAppenderBase<ILoggingEvent> {
         }
     }
 
-    private boolean isDeferred(ILoggingEvent e, boolean reentrant) {
+    private boolean isDeferred(ILoggingEvent e) {
         // Events which are produced before startup (eg with StrictProducerLifeCycleStrategy) are deferred to avoid
         // warnings from logback.
         if (!isStarted()) {
-            return true;
-        }
-
-        // Reentrant appends are deferred to avoid later recursion (although self-feeding is an issue)
-        if (reentrant) {
             return true;
         }
 
