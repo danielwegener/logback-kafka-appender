@@ -69,7 +69,7 @@ This is an example `logback.xml` that uses a common `PatternLayout` to encode a 
             <producerConfig>bootstrap.servers=localhost:9092</producerConfig>
 
             <!-- this is the fallback appender if kafka is not available. -->
-            <appender-ref ref="STDOUT">
+            <appender-ref ref="STDOUT" />
         </appender>
 
     <root level="info">
