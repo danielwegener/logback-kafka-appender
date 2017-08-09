@@ -10,30 +10,37 @@ import com.github.danielwegener.logback.kafka.delivery.DeliveryStrategy;
 import com.github.danielwegener.logback.kafka.delivery.FailedDeliveryCallback;
 import com.github.danielwegener.logback.kafka.encoding.KafkaMessageEncoder;
 import com.github.danielwegener.logback.kafka.keying.KeyingStrategy;
+import com.github.danielwegener.logback.kafka.producer.ProducerLifeCycleStrategy;
 import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.PartitionInfo;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Collections;
+import java.util.List;
+
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasItem;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
 
 public class KafkaAppenderTest {
 
-    private final KafkaAppender<ILoggingEvent> unit = new KafkaAppender<ILoggingEvent>();
+    private final KafkaAppender unit = new KafkaAppender();
     private final LoggerContext ctx = new LoggerContext();
     @SuppressWarnings("unchecked")
     private final KafkaMessageEncoder<ILoggingEvent> encoder =  mock(KafkaMessageEncoder.class);
+    @SuppressWarnings("unchecked")
     private final KeyingStrategy<ILoggingEvent> keyingStrategy =  mock(KeyingStrategy.class);
     @SuppressWarnings("unchecked")
     private final DeliveryStrategy deliveryStrategy =  mock(DeliveryStrategy.class);
+    @SuppressWarnings("unchecked")
+    private final ProducerLifeCycleStrategy<byte[], byte[]> producerLifeCycleStrategy = mock(ProducerLifeCycleStrategy.class);
 
     @Before
     public void before() {
@@ -46,6 +53,8 @@ public class KafkaAppenderTest {
         unit.addProducerConfig("bootstrap.servers=localhost:1234");
         unit.setKeyingStrategy(keyingStrategy);
         unit.setDeliveryStrategy(deliveryStrategy);
+        unit.setProducerLifeCycleStrategy(producerLifeCycleStrategy);
+        unit.setDiscardingThreshold(5);
         ctx.start();
     }
 
@@ -95,6 +104,7 @@ public class KafkaAppenderTest {
     @Test
     public void testAppend() {
         when(encoder.doEncode(any(ILoggingEvent.class))).thenReturn(new byte[]{0x00, 0x00});
+        whenProducerHasMetadataAvailable();
         unit.start();
         final LoggingEvent evt = new LoggingEvent("fqcn",ctx.getLogger("logger"), Level.ALL, "message", null, new Object[0]);
         unit.append(evt);
@@ -102,8 +112,9 @@ public class KafkaAppenderTest {
     }
 
     @Test
-    public void testDeferredAppend() {
+    public void testDeferredAppendForKafkaEvents() {
         when(encoder.doEncode(any(ILoggingEvent.class))).thenReturn(new byte[]{0x00, 0x00});
+        whenProducerHasMetadataAvailable();
         unit.start();
         final LoggingEvent deferredEvent = new LoggingEvent("fqcn",ctx.getLogger("org.apache.kafka.clients.logger"), Level.ALL, "deferred message", null, new Object[0]);
         unit.doAppend(deferredEvent);
@@ -114,4 +125,61 @@ public class KafkaAppenderTest {
         verify(deliveryStrategy).send(any(KafkaProducer.class), any(ProducerRecord.class), eq(evt), any(FailedDeliveryCallback.class));
     }
 
+    @Test
+    public void testDeferredAppendForUnavailableMetadata() {
+        when(encoder.doEncode(any(ILoggingEvent.class))).thenReturn(new byte[]{0x00, 0x00});
+        whenProducerHasNoMetadataAvailable();
+        unit.setDeferUntilMetadataAvailable(true);
+        unit.start();
+        final LoggingEvent deferredEvent = new LoggingEvent("fqcn",ctx.getLogger("logger"), Level.ALL, "deferred message", null, new Object[0]);
+        unit.doAppend(deferredEvent);
+        verify(deliveryStrategy, times(0)).send(any(KafkaProducer.class), any(ProducerRecord.class), eq(deferredEvent), any(FailedDeliveryCallback.class));
+
+        whenProducerHasMetadataAvailable();
+        final LoggingEvent evt = new LoggingEvent("fqcn",ctx.getLogger("logger"), Level.ALL, "message", null, new Object[0]);
+        unit.doAppend(evt);
+        verify(deliveryStrategy).send(any(KafkaProducer.class), any(ProducerRecord.class), eq(deferredEvent), any(FailedDeliveryCallback.class));
+        verify(deliveryStrategy).send(any(KafkaProducer.class), any(ProducerRecord.class), eq(evt), any(FailedDeliveryCallback.class));
+    }
+
+    @Test
+    public void testDiscardThreshold() {
+        when(encoder.doEncode(any(ILoggingEvent.class))).thenReturn(new byte[]{0x00, 0x00});
+
+        final int QUEUE_SIZE = 5;
+        int DISCARDING_THRESHOLD = 2;
+        int expectedNoOfAppends = QUEUE_SIZE - DISCARDING_THRESHOLD + 1;
+
+        unit.setDeferQueueCapacity(QUEUE_SIZE);
+        unit.setDiscardingThreshold(DISCARDING_THRESHOLD);
+        unit.start();
+        final LoggingEvent deferredEvent = new LoggingEvent("fqcn", ctx.getLogger("org.apache.kafka.clients.logger"), Level.ALL, "deferred message ", null, new Object[0]);
+        for (int i = 0; i < QUEUE_SIZE; ++i) {
+            unit.doAppend(deferredEvent);
+        }
+        verify(deliveryStrategy, times(0)).send(any(KafkaProducer.class), any(ProducerRecord.class), any(ILoggingEvent.class), any(FailedDeliveryCallback.class));
+
+        final LoggingEvent evt = new LoggingEvent("fqcn",ctx.getLogger("logger"), Level.ALL, "message", null, new Object[0]);
+        unit.doAppend(evt);
+
+        verify(deliveryStrategy, times(expectedNoOfAppends)).send(any(KafkaProducer.class), any(ProducerRecord.class), eq(deferredEvent), any(FailedDeliveryCallback.class));
+        verify(deliveryStrategy).send(any(KafkaProducer.class), any(ProducerRecord.class), eq(evt), any(FailedDeliveryCallback.class));
+    }
+
+    private void whenProducerHasPartitions(List<PartitionInfo> partitionInfos) {
+        @SuppressWarnings("unchecked")
+        Producer<byte[], byte[]> mockProducer = mock(Producer.class);
+        when(mockProducer.partitionsFor(anyString())).thenReturn(partitionInfos);
+        when(producerLifeCycleStrategy.getProducer()).thenReturn(mockProducer);
+    }
+
+    private void whenProducerHasMetadataAvailable() {
+        final List<PartitionInfo> nonEmptyList = Collections.singletonList(mock(PartitionInfo.class));
+        whenProducerHasPartitions(nonEmptyList);
+    }
+
+    private void whenProducerHasNoMetadataAvailable() {
+        final List<PartitionInfo> emptyList = Collections.emptyList();
+        whenProducerHasPartitions(emptyList);
+    }
 }

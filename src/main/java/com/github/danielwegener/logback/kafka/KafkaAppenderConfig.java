@@ -27,6 +27,7 @@ public abstract class KafkaAppenderConfig<E> extends UnsynchronizedAppenderBase<
 
     public static final Set<String> KNOWN_PRODUCER_CONFIG_KEYS = new HashSet<String>();
     public static final Map<String,String> DEPRECATED_PRODUCER_CONFIG_KEYS = new HashMap<String, String>();
+
     static {
         KNOWN_PRODUCER_CONFIG_KEYS.add(BOOTSTRAP_SERVERS_CONFIG);
         KNOWN_PRODUCER_CONFIG_KEYS.add(METADATA_FETCH_TIMEOUT_CONFIG);
@@ -62,12 +63,8 @@ public abstract class KafkaAppenderConfig<E> extends UnsynchronizedAppenderBase<
 
     protected Map<String,Object> producerConfig = new HashMap<String, Object>();
 
-
-
     protected boolean checkPrerequisites() {
         boolean errorFree = true;
-
-
 
         if (producerConfig.get(BOOTSTRAP_SERVERS_CONFIG) == null) {
             addError("No \"" + BOOTSTRAP_SERVERS_CONFIG + "\" set for the appender named [\""
@@ -116,7 +113,6 @@ public abstract class KafkaAppenderConfig<E> extends UnsynchronizedAppenderBase<
             addProducerConfigValue(split[0], split[1]);
     }
 
-
     public void addProducerConfigValue(String key, Object value) {
         if (!KNOWN_PRODUCER_CONFIG_KEYS.contains(key))
             addWarn("The key \""+key+"\" is not a known kafka producer config key.");
@@ -140,7 +136,5 @@ public abstract class KafkaAppenderConfig<E> extends UnsynchronizedAppenderBase<
     public void setDeliveryStrategy(DeliveryStrategy deliveryStrategy) {
         this.deliveryStrategy = deliveryStrategy;
     }
-
-
 
 }
