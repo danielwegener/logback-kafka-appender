@@ -2,18 +2,18 @@
 All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
-###Changed
+### Changed
 - Fixed typos in logback warning messages emitted by `com.github.danielwegener.logback.kafka.KafkaAppenderConfig` (#28)
 - Switched default delivery strategy to `com.github.danielwegener.logback.kafka.delivery.AsynchronousDeliveryStrategy` as it is the [more sensible default](https://github.com/danielwegener/logback-kafka-appender/pull/32). 
 
 ## [0.1.0] - 2016-02-07
-###Changed
+### Changed
 - Class `com.github.danielwegener.logback.kafka.KafkaAppenderBase` has been inlined into the `KafkaAppender`.
 - Class `com.github.danielwegener.logback.kafka.encoding.PatternLayoutKafkaMessageEncoder` has been renamed to `com.github.danielwegener.logback.kafka.encoding.LayoutKafkaMessageEncoder` (#9). To ease the migration, there is still a deprecated class alias `PatternLayoutKafkaMessageEncoder`. You should change your logback.xml to `LayoutKafkaMessageEncoder` as soon as possible!
 - `KafkaAppender`, `KeyingStrategy` and `LayoutKafkaMessageEncoder` are now generic and can now be used with alternative logback implementations like logback-access (#16)!
 
 ## [0.0.5] - 2015-12-23
-###Changed
+### Changed
 - Upgrade to kafka 0.9.0. This includes that __Java 6 is no longer supported__.
 - Using of deprecated kafka configuration is reported as logback warning. 
 
