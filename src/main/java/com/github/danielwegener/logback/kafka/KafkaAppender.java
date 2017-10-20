@@ -57,6 +57,10 @@ public class KafkaAppender<E> extends KafkaAppenderConfig<E> {
         // only error free appenders should be activated
         if (!checkPrerequisites()) return;
 
+        if (partition != null && partition < 0) {
+            partition = null;
+        }
+
         lazyProducer = new LazyProducer();
 
         super.start();
@@ -112,14 +116,26 @@ public class KafkaAppender<E> extends KafkaAppenderConfig<E> {
 
     @Override
     protected void append(E e) {
-        final byte[] payload = encoder.doEncode(e);
+        final byte[] payload = encoder.encode(e);
         final byte[] key = keyingStrategy.createKey(e);
-        final ProducerRecord<byte[], byte[]> record = new ProducerRecord<byte[],byte[]>(topic, key, payload);
+
+        final Long timestamp = isAppendTimestamp() ? getTimestamp(e) : null;
+
+        final ProducerRecord<byte[], byte[]> record = new ProducerRecord<>(topic, partition, timestamp, key, payload);
+
         deliveryStrategy.send(lazyProducer.get(), record, e, failedDeliveryCallback);
     }
 
+    protected Long getTimestamp(E e) {
+        if (e instanceof ILoggingEvent) {
+            return ((ILoggingEvent) e).getTimeStamp();
+        } else {
+            return System.currentTimeMillis();
+        }
+    }
+
     protected Producer<byte[], byte[]> createProducer() {
-        return new KafkaProducer<byte[], byte[]>(new HashMap<String, Object>(producerConfig));
+        return new KafkaProducer<>(new HashMap<>(producerConfig));
     }
 
     private void deferAppend(E event) {

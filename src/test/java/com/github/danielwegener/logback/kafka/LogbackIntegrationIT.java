@@ -1,9 +1,10 @@
 package com.github.danielwegener.logback.kafka;
 
 import com.github.danielwegener.logback.kafka.util.TestKafka;
-import kafka.consumer.ConsumerIterator;
-import kafka.consumer.KafkaStream;
-import kafka.consumer.Whitelist;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.common.TopicPartition;
 import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Before;
@@ -16,6 +17,7 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.Collections;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 public class LogbackIntegrationIT {
@@ -41,19 +43,30 @@ public class LogbackIntegrationIT {
 
 
     @Test
-    public void testLogging() throws InterruptedException {
+    public void testLogging() {
 
         for (int i = 0; i<1000; ++i) {
-            logger.info("message"+i);
+            logger.info("message"+(i));
         }
 
-        final KafkaStream<byte[], byte[]> log = kafka.createClient().createMessageStreamsByFilter(new Whitelist("logs"),1).get(0);
-        final ConsumerIterator<byte[], byte[]> iterator = log.iterator();
+        final KafkaConsumer<byte[], byte[]> client = kafka.createClient();
+        client.assign(Collections.singletonList(new TopicPartition("logs", 0)));
+        client.seekToBeginning(Collections.singletonList(new TopicPartition("logs", 0)));
 
-        for (int i=0; i<1000; ++i) {
-            final String messageFromKafka = new String(iterator.next().message(), UTF8);
-            assertThat(messageFromKafka, Matchers.equalTo("message"+i));
+
+        int no = 0;
+
+        ConsumerRecords<byte[],byte[]> poll = client.poll(1000);
+        while(!poll.isEmpty()) {
+            for (ConsumerRecord<byte[], byte[]> consumerRecord : poll) {
+                final String messageFromKafka = new String(consumerRecord.value(), UTF8);
+                assertThat(messageFromKafka, Matchers.equalTo("message"+no));
+                ++no;
+            }
+            poll = client.poll(1000);
         }
+
+        assertEquals(1000, no);
 
     }
 

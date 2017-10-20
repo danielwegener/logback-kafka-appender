@@ -8,7 +8,7 @@ import ch.qos.logback.core.spi.ContextAwareBase;
 import java.nio.ByteBuffer;
 
 /**
- * This strategy uses logbacks CONTEXT_NAME to partition the log messages to kafka.
+ * This strategy uses logbacks CONTEXT_NAME as kafka message key.
  * This is ensures that all log messages logged by the same logging context will remain in the correct order for any consumer.
  * But this strategy can lead to uneven log distribution for a small number of hosts (compared to the number of partitions).
  * @since 0.0.1
