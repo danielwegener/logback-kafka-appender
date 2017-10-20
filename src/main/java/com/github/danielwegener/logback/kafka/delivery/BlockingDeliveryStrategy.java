@@ -31,10 +31,9 @@ public class BlockingDeliveryStrategy extends ContextAwareBase implements Delive
             return true;
         }
         catch (InterruptedException e) { return false; }
-        catch (BufferExhaustedException e) { failureCallback.onFailedDelivery(event, e); }
-        catch (ExecutionException e)  { failureCallback.onFailedDelivery(event, e); }
-        catch (CancellationException e)  { failureCallback.onFailedDelivery(event, e); }
-        catch (TimeoutException e) { failureCallback.onFailedDelivery(event, e); }
+        catch (BufferExhaustedException | ExecutionException | CancellationException | TimeoutException e) {
+            failureCallback.onFailedDelivery(event, e);
+        }
         return false;
     }
 

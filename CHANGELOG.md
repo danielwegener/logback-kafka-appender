@@ -1,10 +1,14 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
-## [Unreleased]
+## [Unreleased 0.2.0]
 ### Changed
 - Fixed typos in logback warning messages emitted by `com.github.danielwegener.logback.kafka.KafkaAppenderConfig` (#28)
-- Switched default delivery strategy to `com.github.danielwegener.logback.kafka.delivery.AsynchronousDeliveryStrategy` as it is the [more sensible default](https://github.com/danielwegener/logback-kafka-appender/pull/32). 
+- Switched default delivery strategy to `com.github.danielwegener.logback.kafka.delivery.AsynchronousDeliveryStrategy` as it is the [more sensible default](https://github.com/danielwegener/logback-kafka-appender/pull/32).
+- Make artifact osgi compatible (#40)
+- Upgrade to logback 1.2.3. Dropped `KafkaMessageEncoder` infrastructure in favor of `ch.qos.logback.core.encoder.Encoder` (#51).
+- Upgrade to kafka 0.10.0. Add use the actual log event timestamp to the kafka record.
+- Minimum Java version is 1.7
 
 ## [0.1.0] - 2016-02-07
 ### Changed

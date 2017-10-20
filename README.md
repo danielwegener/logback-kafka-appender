@@ -10,8 +10,8 @@ This appender provides a way for applications to publish their application logs 
 This is ideal for applications within immutable containers without a writable filesystem.
 
 ## Logback incompatibility Warning 
-Due to a bug in logback-core ([LOGBACK-1158](http://jira.qos.ch/browse/LOGBACK-1158)), __logback-kafka-appender does not work with logback 1.1.7__. This bug will be fixed in the upcoming logback 1.1.8. Until 1.1.8 is released, we recommend to use logback 1.1.6.
 
+__Due to a breaking change in the Logback Encoder API you need to use at least logback version 1.2.__
 
 ## Full configuration example
 
@@ -22,13 +22,13 @@ Add `logback-kafka-appender` and `logback-classic` as library dependencies to yo
 <dependency>
     <groupId>com.github.danielwegener</groupId>
     <artifactId>logback-kafka-appender</artifactId>
-    <version>0.1.0</version>
+    <version>0.2.0</version>
     <scope>runtime</scope>
 </dependency>
 <dependency>
     <groupId>ch.qos.logback</groupId>
     <artifactId>logback-classic</artifactId>
-    <version>1.1.2</version>
+    <version>1.2.3</version>
     <scope>runtime</scope>
 </dependency>
 ```
@@ -36,7 +36,7 @@ Add `logback-kafka-appender` and `logback-classic` as library dependencies to yo
 ```scala
 // [build.sbt]
 libraryDependencies += "com.github.danielwegener" % "logback-kafka-appender" % "0.1.0"
-libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.1.7"
+libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.2.3"
 ```
 
 This is an example `logback.xml` that uses a common `PatternLayout` to encode a log message as a string.
@@ -53,11 +53,8 @@ This is an example `logback.xml` that uses a common `PatternLayout` to encode a 
 
     <!-- This is the kafkaAppender -->
     <appender name="kafkaAppender" class="com.github.danielwegener.logback.kafka.KafkaAppender">
-            <!-- This is the default encoder that encodes every log message to an utf8-encoded string  -->
-            <encoder class="com.github.danielwegener.logback.kafka.encoding.LayoutKafkaMessageEncoder">
-                <layout class="ch.qos.logback.classic.PatternLayout">
-                    <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
-                </layout>
+            <encoder>
+                <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
             </encoder>
             <topic>logs</topic>
             <keyingStrategy class="com.github.danielwegener.logback.kafka.keying.RoundRobinKeyingStrategy" />
@@ -148,38 +145,23 @@ This allows a lot of fine tuning potential (eg. with `batch.size`, `compression.
 
 ## Serialization
 
-This module provides a `LayoutKafkaMessageEncoder` that works like a common logback `LayoutWrappingEncoder`
-(with the distinction that it creates byte-arrays instead of appending them to a synchronous `OutputStream`).
-
-The `LayoutKafkaMessageEncoder` uses a regular `ch.qos.logback.core.Layout` as layout-parameter.
-
-This allows you to use any layout that is capable of laying out an `ILoggingEvent` or `IAccessEvent` like a well-known `PatternLayout` or for example the
-[logstash-logback-encoder's `LogstashLayout`](https://github.com/logstash/logstash-logback-encoder#usage).
+This module supports any `ch.qos.logback.core.encoder.Encoder`. This allows you to use any encoder  that is capable of encoding an `ILoggingEvent` or `IAccessEvent` like the well-known 
+[logback `PatternLayoutEncoder`](https://logback.qos.ch/manual/encoders.html#PatternLayoutEncoder) or for example the 
+[logstash-logback-encoder's `LogstashEncoxer`](https://github.com/logstash/logstash-logback-encoder#usage).
 
 ### Custom Serialization
 
 If you want to write something different than string on your kafka logging topic, you may roll your encoding mechanism. A use case would be to
 to smaller message sizes and/or better serialization/deserialization performance on the producing or consuming side. Useful formats could be BSON, Avro or others.
 
-Just roll your own `KafkaMessageEncoder`. The interface is quite simple:
-
-```java
-package com.github.danielwegener.logback.kafka.encoding;
-public interface KafkaMessageEncoder<E> {
-    byte[] doEncode(E event);
-}
-
-```
+To roll your own implementation please refer to the [logback documentation](https://logback.qos.ch/xref/ch/qos/logback/core/encoder/Encoder.html).
+Note that logback-kafka-appender will _never_ call the `headerBytes()` or `footerBytes()` method.
 
 Your encoder should be type-parameterized for any subtype of the type of event you want to support (typically `ILoggingEvent`) like in
 
 ```java
-public class MyEncoder extends KafkaMessageEncoderBase<ILoggingEvent> { //...
+public class MyEncoder extends ch.qos.logback.core.encoder.Encoder<ILoggingEvent> {/*..*/}
 ```
-
-You may also extend The `KafkaMessageEncoderBase` class that already implements the `ContextAware` and `Lifecycle` interfaces
-and thus allows accessing the appender configuration and work with its lifecycle.
-
 
 ## Keying strategies / Partitioning
 
@@ -228,16 +210,6 @@ A custom keying strategy may especially become handy when you want to use kafka'
 
 - __Q: I want to log to different/multiple topics!<br>__
   A: No problem, create an appender for each topic.
-
-- __Q: I want my logs in the logstash json format!<br>__
-  A: Use the [`LogstashLayout` from logstash-logback-encoder](https://github.com/logstash/logstash-logback-encoder#encoder)<br>
-  Example:
-```xml
-<encoder class="com.github.danielwegener.logback.kafka.encoding.PatternLayoutKafkaMessageEncoder">
-  <layout class="net.logstash.logback.layout.LogstashLayout" />
-</encoder>
-```
-
 
 ## License
 

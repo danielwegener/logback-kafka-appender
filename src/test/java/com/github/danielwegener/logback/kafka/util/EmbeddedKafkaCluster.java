@@ -1,7 +1,11 @@
 package com.github.danielwegener.logback.kafka.util;
 
+import java.util.HashMap;
+import java.util.Map;
+import kafka.metrics.KafkaMetricsReporter;
 import kafka.server.KafkaConfig;
 import kafka.server.KafkaServer;
+import kafka.utils.SystemTime$;
 import scala.Some;
 
 import java.io.File;
@@ -9,12 +13,12 @@ import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Properties;
+import scala.collection.immutable.Vector$;
 
 public class EmbeddedKafkaCluster {
     private final List<Integer> ports;
     private final String zkConnection;
-    private final Properties baseProperties;
+    private final Map<String, String> baseProperties;
 
     private final String brokerList;
 
@@ -22,14 +26,14 @@ public class EmbeddedKafkaCluster {
     private final List<File> logDirs;
 
     public EmbeddedKafkaCluster(String zkConnection) {
-        this(zkConnection, new Properties());
+        this(zkConnection, Collections.<String, String>emptyMap());
     }
 
-    public EmbeddedKafkaCluster(String zkConnection, Properties baseProperties) {
+    public EmbeddedKafkaCluster(String zkConnection, Map<String, String> baseProperties) {
         this(zkConnection, baseProperties, Collections.singletonList(-1));
     }
 
-    public EmbeddedKafkaCluster(String zkConnection, Properties baseProperties, List<Integer> ports) {
+    public EmbeddedKafkaCluster(String zkConnection, Map<String, String> baseProperties, List<Integer> ports) {
         this.zkConnection = zkConnection;
         this.ports = resolvePorts(ports);
         this.baseProperties = baseProperties;
@@ -71,14 +75,14 @@ public class EmbeddedKafkaCluster {
             Integer port = ports.get(i);
             File logDir = TestUtils.constructTempDir("kafka-local");
 
-            Properties properties = new Properties();
+            Map<String, String> properties = new HashMap<String, String>();
             properties.putAll(baseProperties);
-            properties.setProperty("zookeeper.connect", zkConnection);
-            properties.setProperty("broker.id", String.valueOf(i + 1));
-            properties.setProperty("host.name", "localhost");
-            properties.setProperty("port", Integer.toString(port));
-            properties.setProperty("log.dir", logDir.getAbsolutePath());
-            properties.setProperty("log.flush.interval.messages", String.valueOf(1));
+            properties.put("zookeeper.connect", zkConnection);
+            properties.put("broker.id", String.valueOf(i + 1));
+            properties.put("host.name", "localhost");
+            properties.put("port", Integer.toString(port));
+            properties.put("log.dir", logDir.getAbsolutePath());
+            properties.put("log.flush.interval.messages", String.valueOf(1));
 
             KafkaServer broker = startBroker(properties);
 
@@ -88,14 +92,15 @@ public class EmbeddedKafkaCluster {
     }
 
 
-    private KafkaServer startBroker(Properties props) {
-        KafkaServer server = new KafkaServer(new KafkaConfig(props), new SystemTime(), Some.apply("embedded-kafka-cluster"));
+    private KafkaServer startBroker(Map<String, String> props) {
+        KafkaServer server = new KafkaServer(new KafkaConfig(props), SystemTime$.MODULE$,
+                Some.apply("embedded-kafka-cluster"), Vector$.MODULE$.<KafkaMetricsReporter>empty());
         server.startup();
         return server;
     }
 
-    public Properties getProps() {
-        Properties props = new Properties();
+    public Map<String, String> getProps() {
+        final Map<String,String> props = new HashMap<String, String>();
         props.putAll(baseProperties);
         props.put("metadata.broker.list", brokerList);
         props.put("zookeeper.connect", zkConnection);
@@ -118,6 +123,7 @@ public class EmbeddedKafkaCluster {
         for (KafkaServer broker : brokers) {
             try {
                 broker.shutdown();
+                broker.awaitShutdown();
             } catch (Exception e) {
                 e.printStackTrace();
             }
