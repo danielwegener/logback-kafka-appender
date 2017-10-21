@@ -7,12 +7,13 @@ import com.github.danielwegener.logback.kafka.delivery.DeliveryStrategy;
 import com.github.danielwegener.logback.kafka.encoding.KafkaMessageEncoder;
 import com.github.danielwegener.logback.kafka.keying.KeyingStrategy;
 import com.github.danielwegener.logback.kafka.keying.RoundRobinKeyingStrategy;
-import static org.apache.kafka.clients.producer.ProducerConfig.*;
 
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+
+import static org.apache.kafka.clients.producer.ProducerConfig.*;
 
 /**
  * @since 0.0.1
@@ -30,13 +31,13 @@ public abstract class KafkaAppenderConfig<E> extends UnsynchronizedAppenderBase<
     static {
         KNOWN_PRODUCER_CONFIG_KEYS.add(BOOTSTRAP_SERVERS_CONFIG);
         KNOWN_PRODUCER_CONFIG_KEYS.add(METADATA_FETCH_TIMEOUT_CONFIG);
-        DEPRECATED_PRODUCER_CONFIG_KEYS.put(METADATA_FETCH_TIMEOUT_CONFIG, MAX_BLOCK_MS_CONFIG);
+//        DEPRECATED_PRODUCER_CONFIG_KEYS.put(METADATA_FETCH_TIMEOUT_CONFIG, MAX_BLOCK_MS_CONFIG);
         KNOWN_PRODUCER_CONFIG_KEYS.add(METADATA_MAX_AGE_CONFIG);
         KNOWN_PRODUCER_CONFIG_KEYS.add(BATCH_SIZE_CONFIG);
         KNOWN_PRODUCER_CONFIG_KEYS.add(BUFFER_MEMORY_CONFIG);
         KNOWN_PRODUCER_CONFIG_KEYS.add(ACKS_CONFIG);
         KNOWN_PRODUCER_CONFIG_KEYS.add(TIMEOUT_CONFIG);
-        DEPRECATED_PRODUCER_CONFIG_KEYS.put(METADATA_FETCH_TIMEOUT_CONFIG, REQUEST_TIMEOUT_MS_CONFIG);
+//        DEPRECATED_PRODUCER_CONFIG_KEYS.put(METADATA_FETCH_TIMEOUT_CONFIG, REQUEST_TIMEOUT_MS_CONFIG);
         KNOWN_PRODUCER_CONFIG_KEYS.add(LINGER_MS_CONFIG);
         KNOWN_PRODUCER_CONFIG_KEYS.add(CLIENT_ID_CONFIG);
         KNOWN_PRODUCER_CONFIG_KEYS.add(SEND_BUFFER_CONFIG);
@@ -54,10 +55,10 @@ public abstract class KafkaAppenderConfig<E> extends UnsynchronizedAppenderBase<
         KNOWN_PRODUCER_CONFIG_KEYS.add(MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION);
         KNOWN_PRODUCER_CONFIG_KEYS.add(KEY_SERIALIZER_CLASS_CONFIG);
         KNOWN_PRODUCER_CONFIG_KEYS.add(VALUE_SERIALIZER_CLASS_CONFIG);
-        KNOWN_PRODUCER_CONFIG_KEYS.add(CONNECTIONS_MAX_IDLE_MS_CONFIG);
-        KNOWN_PRODUCER_CONFIG_KEYS.add(PARTITIONER_CLASS_CONFIG);
-        KNOWN_PRODUCER_CONFIG_KEYS.add(MAX_BLOCK_MS_CONFIG);
-        KNOWN_PRODUCER_CONFIG_KEYS.add(REQUEST_TIMEOUT_MS_CONFIG);
+//        KNOWN_PRODUCER_CONFIG_KEYS.add(CONNECTIONS_MAX_IDLE_MS_CONFIG);
+//        KNOWN_PRODUCER_CONFIG_KEYS.add(PARTITIONER_CLASS_CONFIG);
+//        KNOWN_PRODUCER_CONFIG_KEYS.add(MAX_BLOCK_MS_CONFIG);
+//        KNOWN_PRODUCER_CONFIG_KEYS.add(REQUEST_TIMEOUT_MS_CONFIG);
     }
 
     protected Map<String,Object> producerConfig = new HashMap<String, Object>();
