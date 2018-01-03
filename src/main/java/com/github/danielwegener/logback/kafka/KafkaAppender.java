@@ -124,7 +124,12 @@ public class KafkaAppender<E> extends KafkaAppenderConfig<E> {
         final ProducerRecord<byte[], byte[]> record = new ProducerRecord<>(topic, null, timestamp, key,
                 payload);
 
-        deliveryStrategy.send(lazyProducer.get(), record, e, failedDeliveryCallback);
+        Producer<byte[], byte[]> producer = lazyProducer.get();
+        if (producer != null) {
+            deliveryStrategy.send(lazyProducer.get(), record, e, failedDeliveryCallback);
+        } else {
+            failedDeliveryCallback.onFailedDelivery(e, null);
+        }
     }
 
     protected Producer<byte[], byte[]> createProducer() {
