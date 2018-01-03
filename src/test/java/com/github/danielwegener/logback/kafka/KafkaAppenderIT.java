@@ -1,16 +1,22 @@
 package com.github.danielwegener.logback.kafka;
 
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
+
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
-import ch.qos.logback.classic.PatternLayout;
+import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.classic.spi.LoggingEvent;
 import ch.qos.logback.core.status.Status;
 import ch.qos.logback.core.status.StatusListener;
-import com.github.danielwegener.logback.kafka.encoding.LayoutKafkaMessageEncoder;
 import com.github.danielwegener.logback.kafka.keying.RoundRobinKeyingStrategy;
 import com.github.danielwegener.logback.kafka.util.TestKafka;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.util.Properties;
+import java.util.Random;
 import kafka.consumer.Consumer;
 import kafka.consumer.ConsumerIterator;
 import kafka.consumer.KafkaStream;
@@ -23,14 +29,6 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ErrorCollector;
-
-import java.io.IOException;
-import java.nio.charset.Charset;
-import java.util.Properties;
-import java.util.Random;
-
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
 
 
 public class KafkaAppenderIT {
@@ -68,11 +66,12 @@ public class KafkaAppenderIT {
         loggerContext.putProperty("HOSTNAME","localhost");
 
         unit = new KafkaAppender<ILoggingEvent>();
-        final PatternLayout patternLayout = new PatternLayout();
-        patternLayout.setPattern("%msg");
-        patternLayout.setContext(loggerContext);
-        patternLayout.start();
-        unit.setEncoder(new LayoutKafkaMessageEncoder(patternLayout, Charset.forName("UTF-8")));
+        final PatternLayoutEncoder patternLayoutEncoder = new PatternLayoutEncoder();
+        patternLayoutEncoder.setPattern("%msg");
+        patternLayoutEncoder.setContext(loggerContext);
+        patternLayoutEncoder.setCharset(Charset.forName("UTF-8"));
+        patternLayoutEncoder.start();
+        unit.setEncoder(patternLayoutEncoder);
         unit.setTopic("logs");
         unit.setName("TestKafkaAppender");
         unit.setContext(loggerContext);

@@ -112,14 +112,28 @@ public class KafkaAppender<E> extends KafkaAppenderConfig<E> {
 
     @Override
     protected void append(E e) {
-        final byte[] payload = encoder.doEncode(e);
+        final byte[] payload = encoder.encode(e);
         final byte[] key = keyingStrategy.createKey(e);
-        final ProducerRecord<byte[], byte[]> record = new ProducerRecord<byte[],byte[]>(topic, key, payload);
-        deliveryStrategy.send(lazyProducer.get(), record, e, failedDeliveryCallback);
+
+        final Long timestamp;
+        if (e instanceof ILoggingEvent) {
+            timestamp = ((ILoggingEvent) e).getTimeStamp();
+        } else {
+            timestamp = null;
+        }
+        final ProducerRecord<byte[], byte[]> record = new ProducerRecord<>(topic, null, timestamp, key,
+                payload);
+
+        Producer<byte[], byte[]> producer = lazyProducer.get();
+        if (producer != null) {
+            deliveryStrategy.send(lazyProducer.get(), record, e, failedDeliveryCallback);
+        } else {
+            failedDeliveryCallback.onFailedDelivery(e, null);
+        }
     }
 
     protected Producer<byte[], byte[]> createProducer() {
-        return new KafkaProducer<byte[], byte[]>(new HashMap<String, Object>(producerConfig));
+        return new KafkaProducer<>(new HashMap<>(producerConfig));
     }
 
     private void deferAppend(E event) {

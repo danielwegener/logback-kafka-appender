@@ -1,5 +1,7 @@
 package com.github.danielwegener.logback.kafka.util;
 
+import java.util.Collections;
+import java.util.Map;
 import kafka.consumer.Consumer;
 import kafka.javaapi.consumer.ConsumerConnector;
 import org.apache.kafka.clients.KafkaClient;
@@ -50,8 +52,9 @@ public class TestKafka {
         return createTestKafka(brokerPorts, null);
     }
 
-    public static TestKafka createTestKafka(List<Integer> brokerPorts, Properties properties) throws IOException, InterruptedException {
-        if (properties == null) properties = new Properties();
+    public static TestKafka createTestKafka(List<Integer> brokerPorts, Map<String, String> properties)
+            throws IOException, InterruptedException {
+        if (properties == null) properties = Collections.emptyMap();
         final EmbeddedZookeeper zk = new EmbeddedZookeeper(-1);
         zk.startup();
 
