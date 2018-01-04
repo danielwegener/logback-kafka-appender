@@ -1,7 +1,8 @@
 package com.github.danielwegener.logback.kafka.util;
 
+import static org.junit.Assert.assertEquals;
+
 import org.apache.zookeeper.server.NIOServerCnxnFactory;
-import org.apache.zookeeper.server.NettyServerCnxnFactory;
 import org.apache.zookeeper.server.ServerCnxnFactory;
 import org.apache.zookeeper.server.ZooKeeperServer;
 
@@ -12,7 +13,7 @@ import java.net.InetSocketAddress;
 
 public class EmbeddedZookeeper {
     private int port = -1;
-    private int tickTime = 500;
+    private int tickTime = 100;
 
     private ServerCnxnFactory factory;
     private File snapshotDir;
@@ -45,17 +46,25 @@ public class EmbeddedZookeeper {
         this.factory = NIOServerCnxnFactory.createFactory(new InetSocketAddress("localhost", port), 1024);
         this.snapshotDir = TestUtils.constructTempDir("embeeded-zk/snapshot");
         this.logDir = TestUtils.constructTempDir("embeeded-zk/log");
-
+        final ZooKeeperServer zooKeeperServer = new ZooKeeperServer(snapshotDir, logDir, tickTime);
         try {
-            factory.startup(new ZooKeeperServer(snapshotDir, logDir, tickTime));
+            factory.startup(zooKeeperServer);
         } catch (InterruptedException e) {
             throw new IOException(e);
         }
+        assertEquals("standalone", zooKeeperServer.getState());
+        assertEquals(this.port, zooKeeperServer.getClientPort());
+
     }
 
 
     public void shutdown() {
         factory.shutdown();
+        try {
+            factory.join();
+        } catch (InterruptedException e) {
+            throw new IllegalStateException("should not happen: "+e.getMessage(), e);
+        }
         try {
             TestUtils.deleteFile(snapshotDir);
         } catch (FileNotFoundException e) {
@@ -72,27 +81,9 @@ public class EmbeddedZookeeper {
         return "localhost:" + port;
     }
 
-    public void setPort(int port) {
-        this.port = port;
-    }
-
-    public void setTickTime(int tickTime) {
-        this.tickTime = tickTime;
-    }
-
-    public int getPort() {
-        return port;
-    }
-
-    public int getTickTime() {
-        return tickTime;
-    }
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder("EmbeddedZookeeper{");
-        sb.append("connection=").append(getConnection());
-        sb.append('}');
-        return sb.toString();
+        return "EmbeddedZookeeper{" + "connection=" + getConnection() + '}';
     }
 }

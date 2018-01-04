@@ -9,9 +9,9 @@ import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertThat;
 
 
-public class RoundRobinKeyingStrategyTest {
+public class NoKeyKeyingStrategyTest {
 
-    private final RoundRobinKeyingStrategy unit = new RoundRobinKeyingStrategy();
+    private final NoKeyKeyingStrategy unit = new NoKeyKeyingStrategy();
 
     @Test
     public void shouldAlwaysReturnNull() {

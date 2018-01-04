@@ -1,35 +1,33 @@
 package com.github.danielwegener.logback.kafka.util;
 
-import kafka.consumer.Consumer;
-import kafka.javaapi.consumer.ConsumerConnector;
-import org.apache.kafka.clients.KafkaClient;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.common.serialization.ByteArrayDeserializer;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Properties;
-import java.util.Random;
+import java.util.Map;
 
-/**
- * @author Daniel Wegener (Holisticon AG)
- */
 public class TestKafka {
 
     private final EmbeddedZookeeper zookeeper;
     private final EmbeddedKafkaCluster kafkaCluster;
 
-    public ConsumerConnector createClient() {
-        return createClient(new Properties());
+    public KafkaConsumer<byte[], byte[]> createClient() {
+        return createClient(new HashMap<String, Object>());
     }
 
-    public ConsumerConnector createClient(Properties consumerProperties) {
-        consumerProperties.put("metadata.broker.list", getBrokerList());
-        consumerProperties.put("group.id", "simple-consumer-" + new Random().nextInt());
-        consumerProperties.put("auto.commit.enable","false");
-        consumerProperties.put("auto.offset.reset","smallest");
-        consumerProperties.put("zookeeper.connect", getZookeeperConnection());
-        final kafka.consumer.ConsumerConfig consumerConfig = new kafka.consumer.ConsumerConfig(consumerProperties);
-        return Consumer.createJavaConsumerConnector(consumerConfig);
+    public KafkaConsumer<byte[], byte[]> createClient(Map<String, Object> consumerProperties) {
+        consumerProperties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, getBrokerList());
+        //consumerProperties.put("group.id", "simple-consumer-" + new Random().nextInt());
+        consumerProperties.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");
+        consumerProperties.put("auto.offset.reset","earliest");
+        consumerProperties.put("key.deserializer", ByteArrayDeserializer.class.getName());
+        consumerProperties.put("value.deserializer", ByteArrayDeserializer.class.getName());
+        return new KafkaConsumer<>(consumerProperties);
     }
 
 
@@ -38,21 +36,26 @@ public class TestKafka {
         this.kafkaCluster = kafkaCluster;
     }
 
-    public static TestKafka createTestKafka(int brokerCount) throws IOException, InterruptedException {
+    public static TestKafka createTestKafka(int brokerCount, int partitionCount, int replicationFactor) throws IOException, InterruptedException {
         final List<Integer> ports = new ArrayList<Integer>(brokerCount);
         for (int i=0; i<brokerCount; ++i) {
             ports.add(-1);
         }
-        return createTestKafka(ports, null);
+        final Map<String, String> properties = new HashMap<>();
+        properties.put("num.partitions", Integer.toString(partitionCount));
+        properties.put("default.replication.factor", Integer.toString(replicationFactor));
+
+        return createTestKafka(ports, properties);
     }
 
     public static TestKafka createTestKafka(List<Integer> brokerPorts) throws IOException, InterruptedException {
-        return createTestKafka(brokerPorts, null);
+        return createTestKafka(brokerPorts, Collections.<String, String>emptyMap());
     }
 
-    public static TestKafka createTestKafka(List<Integer> brokerPorts, Properties properties) throws IOException, InterruptedException {
-        if (properties == null) properties = new Properties();
-        final EmbeddedZookeeper zk = new EmbeddedZookeeper(-1);
+    public static TestKafka createTestKafka(List<Integer> brokerPorts, Map<String, String> properties)
+            throws IOException, InterruptedException {
+        if (properties == null) properties = Collections.emptyMap();
+        final EmbeddedZookeeper zk = new EmbeddedZookeeper(-1, 100);
         zk.startup();
 
 

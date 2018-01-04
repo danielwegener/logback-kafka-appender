@@ -1,17 +1,16 @@
 # logback-kafka-appender
 
-[![Join the chat at https://gitter.im/danielwegener/logback-kafka-appender](https://badges.gitter.im/danielwegener/logback-kafka-appender.svg)](https://gitter.im/danielwegener/logback-kafka-appender?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Find help or join the discussion at https://gitter.im/danielwegener/logback-kafka-appender](https://badges.gitter.im/danielwegener/logback-kafka-appender.svg)](https://gitter.im/danielwegener/logback-kafka-appender?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.danielwegener/logback-kafka-appender/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.danielwegener/logback-kafka-appender)
 [![Build Status](https://travis-ci.org/danielwegener/logback-kafka-appender.svg?branch=master)](https://travis-ci.org/danielwegener/logback-kafka-appender)
 [![Coverage Status](https://img.shields.io/coveralls/danielwegener/logback-kafka-appender.svg)](https://coveralls.io/r/danielwegener/logback-kafka-appender)
 
-This appender provides a way for applications to publish their application logs to Apache Kafka.
-This is ideal for applications within immutable containers without a writable filesystem.
+This appender lets your application publish its application logs directly to Apache Kafka.
 
 ## Logback incompatibility Warning 
-Due to a bug in logback-core ([LOGBACK-1158](http://jira.qos.ch/browse/LOGBACK-1158)), __logback-kafka-appender does not work with logback 1.1.7__. This bug will be fixed in the upcoming logback 1.1.8. Until 1.1.8 is released, we recommend to use logback 1.1.6.
 
+__Due to a breaking change in the Logback Encoder API you need to use at least logback version 1.2.__
 
 ## Full configuration example
 
@@ -22,21 +21,21 @@ Add `logback-kafka-appender` and `logback-classic` as library dependencies to yo
 <dependency>
     <groupId>com.github.danielwegener</groupId>
     <artifactId>logback-kafka-appender</artifactId>
-    <version>0.1.0</version>
+    <version>0.2.0</version>
     <scope>runtime</scope>
 </dependency>
 <dependency>
     <groupId>ch.qos.logback</groupId>
     <artifactId>logback-classic</artifactId>
-    <version>1.1.2</version>
+    <version>1.2.3</version>
     <scope>runtime</scope>
 </dependency>
 ```
 
 ```scala
 // [build.sbt]
-libraryDependencies += "com.github.danielwegener" % "logback-kafka-appender" % "0.1.0"
-libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.1.7"
+libraryDependencies += "com.github.danielwegener" % "logback-kafka-appender" % "0.2.0"
+libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.2.3"
 ```
 
 This is an example `logback.xml` that uses a common `PatternLayout` to encode a log message as a string.
@@ -53,15 +52,18 @@ This is an example `logback.xml` that uses a common `PatternLayout` to encode a 
 
     <!-- This is the kafkaAppender -->
     <appender name="kafkaAppender" class="com.github.danielwegener.logback.kafka.KafkaAppender">
-            <!-- This is the default encoder that encodes every log message to an utf8-encoded string  -->
-            <encoder class="com.github.danielwegener.logback.kafka.encoding.LayoutKafkaMessageEncoder">
-                <layout class="ch.qos.logback.classic.PatternLayout">
-                    <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
-                </layout>
+            <encoder>
+                <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
             </encoder>
             <topic>logs</topic>
-            <keyingStrategy class="com.github.danielwegener.logback.kafka.keying.RoundRobinKeyingStrategy" />
+            <keyingStrategy class="com.github.danielwegener.logback.kafka.keying.NoKeyKeyingStrategy" />
             <deliveryStrategy class="com.github.danielwegener.logback.kafka.delivery.AsynchronousDeliveryStrategy" />
+            
+            <!-- Optional parameter to use a fixed partition -->
+            <!-- <partition>0</partition> -->
+            
+            <!-- Optional parameter to include log timestamps into the kafka message -->
+            <!-- <appendTimestamp>true</appendTimestamp> -->
 
             <!-- each <producerConfig> translates to regular kafka-client config (format: key=value) -->
             <!-- producer configs are documented here: https://kafka.apache.org/documentation.html#newproducerconfigs -->
@@ -83,9 +85,9 @@ You may also look at the [complete configuration examples](src/example/resources
 
 ### Compatibility
 
-logback-kafka-appender depends on `org.apache.kafka:kafka-clients:0.9.0.0:jar`. It can append logs to a kafka broker with version 0.9.0.0 or higher.
+logback-kafka-appender depends on `org.apache.kafka:kafka-clients:1.0.0:jar`. It can append logs to a kafka broker with version 0.9.0.0 or higher.
 
-The dependency to kafka-clients is not shadowed and may be upgraded to a higher, binary compatible, version through dependency resolution.
+The dependency to kafka-clients is not shadowed and may be upgraded to a higher, api compatible, version through dependency overrides.
 
 ### Delivery strategies
 
@@ -148,38 +150,23 @@ This allows a lot of fine tuning potential (eg. with `batch.size`, `compression.
 
 ## Serialization
 
-This module provides a `LayoutKafkaMessageEncoder` that works like a common logback `LayoutWrappingEncoder`
-(with the distinction that it creates byte-arrays instead of appending them to a synchronous `OutputStream`).
-
-The `LayoutKafkaMessageEncoder` uses a regular `ch.qos.logback.core.Layout` as layout-parameter.
-
-This allows you to use any layout that is capable of laying out an `ILoggingEvent` or `IAccessEvent` like a well-known `PatternLayout` or for example the
-[logstash-logback-encoder's `LogstashLayout`](https://github.com/logstash/logstash-logback-encoder#usage).
+This module supports any `ch.qos.logback.core.encoder.Encoder`. This allows you to use any encoder  that is capable of encoding an `ILoggingEvent` or `IAccessEvent` like the well-known 
+[logback `PatternLayoutEncoder`](https://logback.qos.ch/manual/encoders.html#PatternLayoutEncoder) or for example the 
+[logstash-logback-encoder's `LogstashEncoxer`](https://github.com/logstash/logstash-logback-encoder#usage).
 
 ### Custom Serialization
 
 If you want to write something different than string on your kafka logging topic, you may roll your encoding mechanism. A use case would be to
 to smaller message sizes and/or better serialization/deserialization performance on the producing or consuming side. Useful formats could be BSON, Avro or others.
 
-Just roll your own `KafkaMessageEncoder`. The interface is quite simple:
-
-```java
-package com.github.danielwegener.logback.kafka.encoding;
-public interface KafkaMessageEncoder<E> {
-    byte[] doEncode(E event);
-}
-
-```
+To roll your own implementation please refer to the [logback documentation](https://logback.qos.ch/xref/ch/qos/logback/core/encoder/Encoder.html).
+Note that logback-kafka-appender will _never_ call the `headerBytes()` or `footerBytes()` method.
 
 Your encoder should be type-parameterized for any subtype of the type of event you want to support (typically `ILoggingEvent`) like in
 
 ```java
-public class MyEncoder extends KafkaMessageEncoderBase<ILoggingEvent> { //...
+public class MyEncoder extends ch.qos.logback.core.encoder.Encoder<ILoggingEvent> {/*..*/}
 ```
-
-You may also extend The `KafkaMessageEncoderBase` class that already implements the `ContextAware` and `Lifecycle` interfaces
-and thus allows accessing the appender configuration and work with its lifecycle.
-
 
 ## Keying strategies / Partitioning
 
@@ -191,26 +178,28 @@ Another implication is how evenly our log messages are distributed across all av
 between multiple brokers.
 
 The order of log messages may or may not be important, depending on the intended consumer-audience (e.g. a logstash indexer will reorder all message by its timestamp anyway).
-The kafka producer client uses a message key as partitioner. Thus `logback-kafka-appender` supports the following partitioning strategies:
+
+You can provide a fixed partition for the kafka appender using the `partition` property or let the producer use the message key to partition a message. Thus `logback-kafka-appender` supports the following keying strategies strategies:
 
 | Strategy   | Description  |
 |---|---|
-| `RoundRobinKeyingStrategy` (default)   | Evenly distributes all written log messages over all available kafka partitions. This strategy may lead to unexpected read orders on clients.   |
-| `HostNameKeyingStrategy` | This strategy uses the HOSTNAME to partition the log messages to kafka. This is useful because it ensures that all log messages issued by this host will remain in the correct order for any consumer. But this strategy can lead to uneven log distribution for a small number of hosts (compared to the number of partitions). |
-| `ContextNameKeyingStrategy` |  This strategy uses logbacks CONTEXT_NAME to partition the log messages to kafka. This is ensures that all log messages logged by the same logging context will remain in the correct order for any consumer. But this strategy can lead to uneven log distribution for a small number of hosts (compared to the number of partitions). This strategy only works for `ILoggingEvents`. |
-| `ThreadNameKeyingStrategy` |  This strategy uses the calling threads name as partitioning key. This ensures that all messages logged by the same thread will remain in the correct order for any consumer. But this strategy can lead to uneven log distribution for a small number of thread(-names) (compared to the number of partitions). This strategy only works for `ILoggingEvents`. |
-| `LoggerNameKeyingStrategy` | * This strategy uses the logger name as partitioning key. This ensures that all messages logged by the same logger will remain in the correct order for any consumer. But this strategy can lead to uneven log distribution for a small number of distinct loggers (compared to the number of partitions). This strategy only works for `ILoggingEvents`. |
+| `NoKeyKeyingStrategy` (default)   | Does not generate a message key. Results in round robin distribution across partition if no fixed partition is provided. |
+| `HostNameKeyingStrategy` | This strategy uses the HOSTNAME as message key. This is useful because it ensures that all log messages issued by this host will remain in the correct order for any consumer. But this strategy can lead to uneven log distribution for a small number of hosts (compared to the number of partitions). |
+| `ContextNameKeyingStrategy` |  This strategy uses logback's CONTEXT_NAME as message key. This is ensures that all log messages logged by the same logging context will remain in the correct order for any consumer. But this strategy can lead to uneven log distribution for a small number of hosts (compared to the number of partitions). This strategy only works for `ILoggingEvents`. |
+| `ThreadNameKeyingStrategy` |  This strategy uses the calling threads name as message key. This ensures that all messages logged by the same thread will remain in the correct order for any consumer. But this strategy can lead to uneven log distribution for a small number of thread(-names) (compared to the number of partitions). This strategy only works for `ILoggingEvents`. |
+| `LoggerNameKeyingStrategy` | * This strategy uses the logger name as message key. This ensures that all messages logged by the same logger will remain in the correct order for any consumer. But this strategy can lead to uneven log distribution for a small number of distinct loggers (compared to the number of partitions). This strategy only works for `ILoggingEvents`. |
 
 
 
 ### Custom keying strategies
 
-If none of the above partitioners satisfies your requirements, you can easily implement your own partitioner by implementing a custom `KeyingStrategy`:
+If none of the above keying strategies satisfies your requirements, you can easily implement your own by implementing a custom `KeyingStrategy`:
 
 ```java
 package foo;
 import com.github.danielwegener.logback.kafka.keying.KeyingStrategy;
 
+/* This is a valid example but does not really make much sense */
 public class LevelKeyingStrategy implements KeyingStrategy<ILoggingEvent> {
     @Override
     public byte[] createKey(ILoggingEvent e) {
@@ -219,7 +208,7 @@ public class LevelKeyingStrategy implements KeyingStrategy<ILoggingEvent> {
 }
 ```
 
-As most custom logback component, your custom partitioning strategy may implement the
+As most custom logback component, your custom partitioning strategy may also implement the
 `ch.qos.logback.core.spi.ContextAware` and `ch.qos.logback.core.spi.LifeCycle` interfaces.
 
 A custom keying strategy may especially become handy when you want to use kafka's log compactation facility.
@@ -228,16 +217,6 @@ A custom keying strategy may especially become handy when you want to use kafka'
 
 - __Q: I want to log to different/multiple topics!<br>__
   A: No problem, create an appender for each topic.
-
-- __Q: I want my logs in the logstash json format!<br>__
-  A: Use the [`LogstashLayout` from logstash-logback-encoder](https://github.com/logstash/logstash-logback-encoder#encoder)<br>
-  Example:
-```xml
-<encoder class="com.github.danielwegener.logback.kafka.encoding.PatternLayoutKafkaMessageEncoder">
-  <layout class="net.logstash.logback.layout.LogstashLayout" />
-</encoder>
-```
-
 
 ## License
 

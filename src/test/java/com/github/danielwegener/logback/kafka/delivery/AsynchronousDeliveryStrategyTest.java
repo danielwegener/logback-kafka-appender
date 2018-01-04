@@ -26,7 +26,8 @@ public class AsynchronousDeliveryStrategyTest {
     private final AsynchronousDeliveryStrategy unit = new AsynchronousDeliveryStrategy();
 
     private final TopicPartition topicAndPartition = new TopicPartition("topic", 0);
-    private final RecordMetadata recordMetadata = new RecordMetadata(topicAndPartition, 0, 0);
+    private final RecordMetadata recordMetadata = new RecordMetadata(topicAndPartition, 0, 0, System
+            .currentTimeMillis(), null, 32, 64);
 
     @Test
     public void testCallbackWillNotTriggerOnFailedDeliveryOnNoException() {
