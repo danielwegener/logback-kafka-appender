@@ -24,7 +24,7 @@ public class KafkaAppender<E> extends KafkaAppenderConfig<E> {
      * Kafka clients uses this prefix for its slf4j logging.
      * This appender defers appends of any Kafka logs since it could cause harmful infinite recursion/self feeding effects.
      */
-    private static final String KAFKA_LOGGER_PREFIX = "org.apache.kafka.clients";
+    private static final String KAFKA_LOGGER_PREFIX = KafkaProducer.class.getPackage().getName().replaceFirst("\\.producer$", "");
 
     private LazyProducer lazyProducer = null;
     private final AppenderAttachableImpl<E> aai = new AppenderAttachableImpl<E>();

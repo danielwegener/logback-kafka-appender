@@ -32,6 +32,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
+import java.lang.reflect.Field;
+
 public class KafkaAppenderTest {
 
     private final KafkaAppender<ILoggingEvent> unit = new KafkaAppender<>();
@@ -137,5 +139,16 @@ public class KafkaAppenderTest {
         verify(deliveryStrategy).send(any(KafkaProducer.class), any(ProducerRecord.class), eq(deferredEvent), any(FailedDeliveryCallback.class));
         verify(deliveryStrategy).send(any(KafkaProducer.class), any(ProducerRecord.class), eq(evt), any(FailedDeliveryCallback.class));
     }
+
+    @Test
+    public void testKafkaLoggerPrefix() throws ReflectiveOperationException {
+        Field constField = KafkaAppender.class.getDeclaredField("KAFKA_LOGGER_PREFIX");
+        if (!constField.isAccessible()) {
+            constField.setAccessible(true);
+        }
+        String constValue = (String) constField.get(null);
+        assertThat(constValue, equalTo("org.apache.kafka.clients"));
+    }
+
 
 }
