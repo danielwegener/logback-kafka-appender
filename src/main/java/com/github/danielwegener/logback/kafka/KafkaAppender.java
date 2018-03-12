@@ -4,7 +4,7 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.Appender;
 import ch.qos.logback.core.spi.AppenderAttachableImpl;
 import com.github.danielwegener.logback.kafka.delivery.FailedDeliveryCallback;
-import org.apache.kafka.clients.producer.Producer;
+import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.ByteArraySerializer;
@@ -15,7 +15,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 /**
  * @since 0.0.1
  */
-public class KafkaAppender<E> extends KafkaAppenderConfig<E> {
+public class KafkaAppender<E> extends KafkaAppenderConfig<E, byte[], byte[]> {
 
     /**
      * Kafka clients uses this prefix for its slf4j logging.
@@ -57,7 +57,7 @@ public class KafkaAppender<E> extends KafkaAppenderConfig<E> {
             partition = null;
         }
 
-        producerSupplier.start(this, producerConfig);
+        deliveryStrategy.start(producerConfig, failedDeliveryCallback);
 
         super.start();
     }
@@ -65,7 +65,7 @@ public class KafkaAppender<E> extends KafkaAppenderConfig<E> {
     @Override
     public void stop() {
         super.stop();
-        producerSupplier.stop();
+        deliveryStrategy.stop();
     }
 
     @Override
@@ -112,12 +112,7 @@ public class KafkaAppender<E> extends KafkaAppenderConfig<E> {
 
         final ProducerRecord<byte[], byte[]> record = new ProducerRecord<>(topic, partition, timestamp, key, payload);
 
-        final Producer<byte[], byte[]> producer = producerSupplier.get();
-        if (producer != null) {
-            deliveryStrategy.send(producer, record, e, failedDeliveryCallback);
-        } else {
-            failedDeliveryCallback.onFailedDelivery(e, null);
-        }
+        deliveryStrategy.send(record, e);
     }
 
     protected Long getTimestamp(E e) {
