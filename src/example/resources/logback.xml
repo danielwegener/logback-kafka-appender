@@ -76,7 +76,7 @@
         <appender-ref ref="STDERR"/>
     </appender>
 
-    <root level="debug">
+    <root level="info">
         <appender-ref ref="very-relaxed-and-fast-kafka-appender" />
         <appender-ref ref="very-restrictive-kafka-appender" />
     </root>
