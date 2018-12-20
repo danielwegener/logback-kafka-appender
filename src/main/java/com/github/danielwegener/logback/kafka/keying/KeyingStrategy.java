@@ -10,10 +10,11 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 public interface KeyingStrategy<E> {
 
     /**
-     * creates a byte array key for the given {@link ch.qos.logback.classic.spi.ILoggingEvent}
+     * creates a generic type key for the given {@link ch.qos.logback.classic.spi.ILoggingEvent}
+     * the key could be any type from byte array to string or any object
      * @param e the logging event
      * @return a key
      */
-    byte[] createKey(E e);
+    <T> T createKey(E e);
 
 }
