@@ -32,6 +32,12 @@ Add `logback-kafka-appender` and `logback-classic` as library dependencies to yo
 </dependency>
 ```
 
+```groovy
+// [build.gradle]
+compile 'com.github.danielwegener:logback-kafka-appender:0.2.0'
+compile 'ch.qos.logback:logback-classic:1.2.3'
+```
+
 ```scala
 // [build.sbt]
 libraryDependencies += "com.github.danielwegener" % "logback-kafka-appender" % "0.2.0"
@@ -177,9 +183,11 @@ arbitrary multi-partition consumer since kafka only provides a guaranteed read o
 Another implication is how evenly our log messages are distributed across all available partitions and therefore balanced
 between multiple brokers.
 
-The order of log messages may or may not be important, depending on the intended consumer-audience (e.g. a logstash indexer will reorder all message by its timestamp anyway).
+The order of log messages may or may not be important, depending on the intended consumer-audience (e.g. a logstash indexer 
+will reorder all message by its timestamp anyway).
 
-You can provide a fixed partition for the kafka appender using the `partition` property or let the producer use the message key to partition a message. Thus `logback-kafka-appender` supports the following keying strategies strategies:
+You can provide a fixed partition for the kafka appender using the `partition` property or let the producer use the message 
+key to partition a message. Thus `logback-kafka-appender` supports the following keying strategies strategies:
 
 | Strategy   | Description  |
 |---|---|
@@ -204,6 +212,21 @@ public class LevelKeyingStrategy implements KeyingStrategy<ILoggingEvent> {
     @Override
     public byte[] createKey(ILoggingEvent e) {
         return ByteBuffer.allocate(4).putInt(e.getLevel()).array();
+    }
+}
+```
+
+You can create key with various type other then byte array,
+
+```java
+package foo;
+import com.github.danielwegener.logback.kafka.keying.KeyingStrategy;
+
+/* This is a valid example but does not really make much sense */
+public class LevelKeyingStrategy implements KeyingStrategy<ILoggingEvent> {
+    @Override
+    public String createKey(ILoggingEvent e) {
+        return e.getLevel();
     }
 }
 ```
