@@ -4,7 +4,7 @@ cache:
   directories:
   - $HOME/.m2
 jdk:
-- openjdk7
+- openjdk8
 install: mvn install -DskipTests=true -Dgpg.skip=true;
 
 # Run unit and integration tests

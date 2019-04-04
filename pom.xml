@@ -21,7 +21,7 @@
 
     <properties>
         <!--General stuff-->
-        <targetJdk>1.7</targetJdk>
+        <targetJdk>1.8</targetJdk>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.build.resourceEncoding>UTF-8</project.build.resourceEncoding>
         <maven.compiler.source>${targetJdk}</maven.compiler.source>
