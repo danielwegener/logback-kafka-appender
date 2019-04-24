@@ -5,20 +5,17 @@ import ch.qos.logback.core.Appender;
 import ch.qos.logback.core.spi.AppenderAttachableImpl;
 import com.github.danielwegener.logback.kafka.delivery.FailedDeliveryCallback;
 import org.apache.kafka.clients.producer.KafkaProducer;
-import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
-import org.apache.kafka.common.KafkaException;
 import org.apache.kafka.common.serialization.ByteArraySerializer;
 
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * @since 0.0.1
  */
-public class KafkaAppender<E> extends KafkaAppenderConfig<E> {
+public class KafkaAppender<E> extends KafkaAppenderConfig<E, byte[], byte[]> {
 
     /**
      * Kafka clients uses this prefix for its slf4j logging.
@@ -26,7 +23,6 @@ public class KafkaAppender<E> extends KafkaAppenderConfig<E> {
      */
     private static final String KAFKA_LOGGER_PREFIX = KafkaProducer.class.getPackage().getName().replaceFirst("\\.producer$", "");
 
-    private LazyProducer lazyProducer = null;
     private final AppenderAttachableImpl<E> aai = new AppenderAttachableImpl<E>();
     private final ConcurrentLinkedQueue<E> queue = new ConcurrentLinkedQueue<E>();
     private final FailedDeliveryCallback<E> failedDeliveryCallback = new FailedDeliveryCallback<E>() {
@@ -61,7 +57,7 @@ public class KafkaAppender<E> extends KafkaAppenderConfig<E> {
             partition = null;
         }
 
-        lazyProducer = new LazyProducer();
+        deliveryStrategy.start(producerConfig, failedDeliveryCallback);
 
         super.start();
     }
@@ -69,14 +65,7 @@ public class KafkaAppender<E> extends KafkaAppenderConfig<E> {
     @Override
     public void stop() {
         super.stop();
-        if (lazyProducer != null && lazyProducer.isInitialized()) {
-            try {
-                lazyProducer.get().close();
-            } catch (KafkaException e) {
-                this.addWarn("Failed to shut down kafka producer: " + e.getMessage(), e);
-            }
-            lazyProducer = null;
-        }
+        deliveryStrategy.stop();
     }
 
     @Override
@@ -123,12 +112,7 @@ public class KafkaAppender<E> extends KafkaAppenderConfig<E> {
 
         final ProducerRecord<byte[], byte[]> record = new ProducerRecord<>(topic, partition, timestamp, key, payload);
 
-        final Producer<byte[], byte[]> producer = lazyProducer.get();
-        if (producer != null) {
-            deliveryStrategy.send(lazyProducer.get(), record, e, failedDeliveryCallback);
-        } else {
-            failedDeliveryCallback.onFailedDelivery(e, null);
-        }
+        deliveryStrategy.send(record, e);
     }
 
     protected Long getTimestamp(E e) {
@@ -137,10 +121,6 @@ public class KafkaAppender<E> extends KafkaAppenderConfig<E> {
         } else {
             return System.currentTimeMillis();
         }
-    }
-
-    protected Producer<byte[], byte[]> createProducer() {
-        return new KafkaProducer<>(new HashMap<>(producerConfig));
     }
 
     private void deferAppend(E event) {
@@ -154,42 +134,6 @@ public class KafkaAppender<E> extends KafkaAppenderConfig<E> {
         while ((event = queue.poll()) != null) {
             super.doAppend(event);
         }
-    }
-
-    /**
-     * Lazy initializer for producer, patterned after commons-lang.
-     *
-     * @see <a href="https://commons.apache.org/proper/commons-lang/javadocs/api-3.4/org/apache/commons/lang3/concurrent/LazyInitializer.html">LazyInitializer</a>
-     */
-    private class LazyProducer {
-
-        private volatile Producer<byte[], byte[]> producer;
-
-        public Producer<byte[], byte[]> get() {
-            Producer<byte[], byte[]> result = this.producer;
-            if (result == null) {
-                synchronized(this) {
-                    result = this.producer;
-                    if(result == null) {
-                        this.producer = result = this.initialize();
-                    }
-                }
-            }
-
-            return result;
-        }
-
-        protected Producer<byte[], byte[]> initialize() {
-            Producer<byte[], byte[]> producer = null;
-            try {
-                producer = createProducer();
-            } catch (Exception e) {
-                addError("error creating producer", e);
-            }
-            return producer;
-        }
-
-        public boolean isInitialized() { return producer != null; }
     }
 
 }

@@ -24,7 +24,7 @@
         <keyingStrategy class="com.github.danielwegener.logback.kafka.keying.NoKeyKeyingStrategy" />
 
         <!-- use async delivery. the application threads are not blocked by logging -->
-        <deliveryStrategy class="com.github.danielwegener.logback.kafka.delivery.AsynchronousDeliveryStrategy" />
+        <deliveryStrategy class="com.github.danielwegener.logback.kafka.delivery.LateAsyncDeliveryStrategy" />
 
         <!-- each <producerConfig> translates to regular kafka-client config (format: key=value) -->
         <!-- producer configs are documented here: https://kafka.apache.org/documentation.html#newproducerconfigs -->

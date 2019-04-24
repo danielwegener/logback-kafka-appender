@@ -7,7 +7,7 @@
 
         <topic>logs</topic>
         <keyingStrategy class="com.github.danielwegener.logback.kafka.keying.HostNameKeyingStrategy" />
-        <deliveryStrategy class="com.github.danielwegener.logback.kafka.delivery.AsynchronousDeliveryStrategy" />
+        <deliveryStrategy class="com.github.danielwegener.logback.kafka.delivery.LateAsyncDeliveryStrategy" />
 
         <producerConfig>bootstrap.servers=localhost:9092</producerConfig>
     </appender>
