@@ -102,7 +102,9 @@ You need make a essential decision: Is it more important to deliver all logs to 
 
 #### Note on Broker outages
 
-The `AsynchronousDeliveryStrategy` does not prevent you from being blocked by the Kafka metadata exchange. That means: If all brokers are not reachable when the logging context starts, or all brokers become unreachable for a longer time period (> `metadata.max.age.ms`), your appender will eventually block. This behavior is undesirable in general and can be migitated with kafka-clients 0.9 (see #16). Until then, you can wrap the KafkaAppender with logback's own AsyncAppender.
+The `AsynchronousDeliveryStrategy` does not prevent you from being blocked by the Kafka metadata exchange. That means: If all brokers are not reachable when the logging context starts, or all brokers become unreachable for a longer time period (> `metadata.max.age.ms`), your appender will eventually block. This behavior is undesirable in general and can be mitigated with kafka-clients 0.9 (see #16). 
+
+In any case, if you want to make sure the appender will never block your application, you can wrap the KafkaAppender with logback's own [AsyncAppender](https://logback.qos.ch/manual/appenders.html#AsyncAppender) or, for more control, the [LoggingEventAsyncDisruptorAppender](https://github.com/logstash/logstash-logback-encoder#async-appenders) from Logstash Logback Encoder.
 
 An example configuration could look like this:
 
@@ -115,6 +117,8 @@ An example configuration could look like this:
     </appender>
 
     <appender name="ASYNC" class="ch.qos.logback.classic.AsyncAppender">
+        <!-- if neverBlock is set to true, the async appender discards messages when its internal queue is full -->
+        <neverBlock>true</neverBlock>  
         <appender-ref ref="kafkaAppender" />
     </appender>
 
