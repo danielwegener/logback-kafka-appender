@@ -136,7 +136,6 @@ public class KafkaAppenderTest {
 
         final LoggingEvent evt = new LoggingEvent("fqcn",ctx.getLogger("logger"), Level.ALL, "message", null, new Object[0]);
         unit.doAppend(evt);
-        verify(deliveryStrategy).send(any(KafkaProducer.class), any(ProducerRecord.class), eq(deferredEvent), any(FailedDeliveryCallback.class));
         verify(deliveryStrategy).send(any(KafkaProducer.class), any(ProducerRecord.class), eq(evt), any(FailedDeliveryCallback.class));
     }
 
@@ -147,7 +146,7 @@ public class KafkaAppenderTest {
             constField.setAccessible(true);
         }
         String constValue = (String) constField.get(null);
-        assertThat(constValue, equalTo("org.apache.kafka.clients"));
+        assertThat(constValue, equalTo("org.apache.kafka"));
     }
 
 
