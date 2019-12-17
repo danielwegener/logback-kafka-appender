@@ -37,9 +37,9 @@
     </issueManagement>
 
     <scm>
-        <connection>scm:git:git@github.com:danielwegener/logback-kafka-appender.git</connection>
-        <developerConnection>scm:git:git@github.com:danielwegener/logback-kafka-appender.git</developerConnection>
-        <url>git@github.com:danielwegener/logback-kafka-appender.git</url>
+        <connection>scm:git:git@github.com:koekj/logback-kafka-appender.git</connection>
+        <developerConnection>scm:git:git@github.com:koekj/logback-kafka-appender.git</developerConnection>
+        <url>git@github.com:koekj/logback-kafka-appender.git</url>
       <tag>HEAD</tag>
     </scm>
 
