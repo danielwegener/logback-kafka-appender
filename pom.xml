@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.github.rahulsinghai</groupId>
     <artifactId>logback-kafka-appender</artifactId>
-    <version>0.2.1-SNAPSHOT-SNAPSHOT</version>
+    <version>0.2.1-SNAPSHOT</version>
     <parent>
         <groupId>org.sonatype.oss</groupId>
         <artifactId>oss-parent</artifactId>
@@ -26,6 +26,17 @@
         <project.build.resourceEncoding>UTF-8</project.build.resourceEncoding>
         <maven.compiler.source>${targetJdk}</maven.compiler.source>
         <maven.compiler.target>${targetJdk}</maven.compiler.target>
+        <maven.compiler.plugin.version>3.8.1</maven.compiler.plugin.version>
+        <maven.enforcer.plugin.version>1.4.1</maven.enforcer.plugin.version>
+        <maven.gpg.plugin.version>1.6</maven.gpg.plugin.version>
+        <maven.jar.plugin.version>3.2.0</maven.jar.plugin.version>
+        <maven.failsafe.plugin.version>2.22.2</maven.failsafe.plugin.version>
+        <maven.surefire.plugin.version>2.22.2</maven.surefire.plugin.version>
+        <maven.javadoc.plugin.version>3.2.0</maven.javadoc.plugin.version>
+        <maven.nexus.staging.plugin.version>1.6.7</maven.nexus.staging.plugin.version>
+        <maven.release.plugin.version>2.5.3</maven.release.plugin.version>
+        <maven.site.plugin.version>3.9.1</maven.site.plugin.version>
+        <maven.source.plugin.version>3.2.1</maven.source.plugin.version>
         <encoding>UTF-8</encoding>
         <slf4j.version>1.7.25</slf4j.version>
         <kafka.version>2.1.1</kafka.version>
@@ -49,10 +60,96 @@
             <name>Rahul Singhai</name>
             <url>https://github.com/rahulsinghai</url>
             <id>rahulsinghai</id>
+            <timezone>Europe/London</timezone>
+            <roles>
+	        <role>project owner</role>
+	        <role>developer</role>
+	    </roles>
         </developer>
     </developers>
 
     <inceptionYear>2015</inceptionYear>
+    
+    <distributionManagement>
+        <snapshotRepository>
+	    <id>ossrh</id>
+	    <url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
+    </distributionManagement>
+
+    <!--
+	  The plugin configuration for maven-gpg-plugin is wrapped inside a profile.
+	  Usually when you build SNAPSHOT version, you don't want to sign the artifacts, because it's
+	  unnecessary and time-consuming.
+	  Artifact signing is only necessary when it's time to release project.
+	  So, we wrap the plugin configuration with a profile, which will only be activated on project
+	  releasing.
+	  This profile will be activated when the value of maven property performRelease is true.
+	  When you use maven-release-plugin and run mvn release:perform, the property value will be
+	  set to true.
+    -->
+  <profiles>
+    <profile>
+      <id>release-sign-artifacts</id>
+
+      <activation>
+        <property>
+          <name>performRelease</name>
+          <value>true</value>
+        </property>
+      </activation>
+
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-source-plugin</artifactId>
+            <version>${maven.source.plugin.version}</version>
+            <executions>
+              <execution>
+                <id>attach-sources</id>
+                <goals>
+                  <goal>jar-no-fork</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-javadoc-plugin</artifactId>
+            <version>${maven.javadoc.plugin.version}</version>
+            <configuration>
+              <source>8</source>
+            </configuration>
+            <executions>
+              <execution>
+                <id>attach-javadocs</id>
+                <goals>
+                  <goal>jar</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-gpg-plugin</artifactId>
+            <version>${maven.gpg.plugin.version}</version>
+            <executions>
+              <execution>
+                <id>sign-artifacts</id>
+                <phase>verify</phase>
+                <goals>
+                  <goal>sign</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 
     <dependencies>
         <dependency>
@@ -171,12 +268,12 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
-                <version>3.0.1</version>
+                <version>${maven.javadoc.plugin.version}</version>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-report-plugin</artifactId>
-                <version>2.22.1</version>
+                <version>${maven.surefire.plugin.version}</version>
             </plugin>
             <plugin>
                 <groupId>com.github.spotbugs</groupId>
@@ -189,12 +286,13 @@
             </plugin>
         </plugins>
     </reporting>
+
     <build>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-enforcer-plugin</artifactId>
-                <version>1.4.1</version>
+                <version>${maven.enforcer.plugin.version}</version>
                 <executions>
                     <execution>
                         <id>enforce-versions</id>
@@ -214,20 +312,19 @@
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-gpg-plugin</artifactId>
-                <version>1.6</version>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-site-plugin</artifactId>
-                <version>3.7.1</version>
+                <version>${maven.site.plugin.version}</version>
                 <configuration>
                 </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.8.0</version>
+		<version>${maven.compiler.plugin.version}</version>
+		<configuration>
+		    <source>${maven.compiler.source}</source>
+		    <target>${maven.compiler.target}</target>
+	        </configuration>
             </plugin>
             <plugin>
                 <groupId>biz.aQute.bnd</groupId>
@@ -245,7 +342,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
-                <version>3.1.1</version>
+                <version>${maven.jar.plugin.version}</version>
                 <configuration>
                     <archive>
                         <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
@@ -261,32 +358,8 @@
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <version>3.0.1</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-source-plugin</artifactId>
-                <version>3.0.1</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-release-plugin</artifactId>
-                <version>2.5.3</version>
+                <version>${maven.release.plugin.version}</version>
             </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
@@ -314,12 +387,12 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>2.22.1</version>
+                <version>${maven.surefire.plugin.version}</version>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-failsafe-plugin</artifactId>
-                <version>2.22.1</version>
+                <version>${maven.failsafe.plugin.version}</version>
                 <executions>
                     <execution>
                         <goals>
@@ -329,6 +402,17 @@
                     </execution>
                 </executions>
             </plugin>
-        </plugins>
+            <plugin>
+                <groupId>org.sonatype.plugins</groupId>
+                <artifactId>nexus-staging-maven-plugin</artifactId>
+                <version>${maven.nexus.staging.plugin.version}</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <serverId>ossrh</serverId>
+                    <nexusUrl>https://s01.oss.sonatype.org/</nexusUrl>
+                    <autoReleaseAfterClose>true</autoReleaseAfterClose>
+                </configuration>
+            </plugin>
+         </plugins>
     </build>
 </project>
