@@ -3,8 +3,8 @@
 [![Find help or join the discussion at https://gitter.im/rahulsinghai/logback-kafka-appender](https://badges.gitter.im/rahulsinghai/logback-kafka-appender.svg)](https://gitter.im/rahulsinghai/logback-kafka-appender?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.rahulsinghai/logback-kafka-appender/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.rahulsinghai/logback-kafka-appender)
-[![Build Status](https://travis-ci.org/rahulsinghai/logback-kafka-appender.svg?branch=master)](https://travis-ci.org/rahulsinghai/logback-kafka-appender)
-[![Coverage Status](https://img.shields.io/coveralls/rahulsinghai/logback-kafka-appender.svg)](https://coveralls.io/r/rahulsinghai/logback-kafka-appender)
+[![Build Status](https://www.travis-ci.com/rahulsinghai/logback-kafka-appender.svg?branch=master)](https://www.travis-ci.com/rahulsinghai/logback-kafka-appender)
+[![Coverage Status](https://coveralls.io/repos/github/rahulsinghai/logback-kafka-appender/badge.svg)](https://coveralls.io/github/rahulsinghai/logback-kafka-appender)
 
 This appender lets your application publish its application logs directly to Apache Kafka.
 
