@@ -1,10 +1,10 @@
 # logback-kafka-appender
 
-[![Find help or join the discussion at https://gitter.im/danielwegener/logback-kafka-appender](https://badges.gitter.im/danielwegener/logback-kafka-appender.svg)](https://gitter.im/danielwegener/logback-kafka-appender?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Find help or join the discussion at https://gitter.im/rahulsinghai/logback-kafka-appender](https://badges.gitter.im/rahulsinghai/logback-kafka-appender.svg)](https://gitter.im/rahulsinghai/logback-kafka-appender?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.danielwegener/logback-kafka-appender/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.danielwegener/logback-kafka-appender)
-[![Build Status](https://travis-ci.org/danielwegener/logback-kafka-appender.svg?branch=master)](https://travis-ci.org/danielwegener/logback-kafka-appender)
-[![Coverage Status](https://img.shields.io/coveralls/danielwegener/logback-kafka-appender.svg)](https://coveralls.io/r/danielwegener/logback-kafka-appender)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.rahulsinghai/logback-kafka-appender/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.rahulsinghai/logback-kafka-appender)
+[![Build Status](https://travis-ci.org/rahulsinghai/logback-kafka-appender.svg?branch=master)](https://travis-ci.org/rahulsinghai/logback-kafka-appender)
+[![Coverage Status](https://img.shields.io/coveralls/rahulsinghai/logback-kafka-appender.svg)](https://coveralls.io/r/rahulsinghai/logback-kafka-appender)
 
 This appender lets your application publish its application logs directly to Apache Kafka.
 
@@ -18,8 +18,9 @@ Add `logback-kafka-appender` and `logback-classic` as library dependencies to yo
 
 ```xml
 [maven pom.xml]
+
 <dependency>
-    <groupId>com.github.danielwegener</groupId>
+    <groupId>com.github.rahulsinghai</groupId>
     <artifactId>logback-kafka-appender</artifactId>
     <version>0.2.0</version>
     <scope>runtime</scope>
@@ -30,18 +31,25 @@ Add `logback-kafka-appender` and `logback-classic` as library dependencies to yo
     <version>1.2.3</version>
     <scope>runtime</scope>
 </dependency>
+<dependency>
+    <groupId>com.fasterxml.jackson.core</groupId>
+    <artifactId>jackson-databind</artifactId>
+    <version>2.9.8</version>
+    <scope>runtime</scope>
+</dependency>
 ```
 
 ```scala
 // [build.sbt]
-libraryDependencies += "com.github.danielwegener" % "logback-kafka-appender" % "0.2.0"
+libraryDependencies += "com.github.rahulsinghai" % "logback-kafka-appender" % "0.2.0"
 libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.2.3"
 ```
 
 This is an example `logback.xml` that uses a common `PatternLayout` to encode a log message as a string.
-- `src/main/resources/logback.xml`
 
 ```xml
+[src/main/resources/logback.xml]
+
 <configuration>
 
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
@@ -51,15 +59,15 @@ This is an example `logback.xml` that uses a common `PatternLayout` to encode a 
     </appender>
 
     <!-- This is the kafkaAppender -->
-    <appender name="kafkaAppender" class="com.github.danielwegener.logback.kafka.KafkaAppender">
+    <appender name="kafkaAppender" class="com.github.rahulsinghai.logback.kafka.KafkaAppender">
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
             <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
         </encoder>
         <topic>logs</topic>
-        <keyingStrategy class="com.github.danielwegener.logback.kafka.keying.NoKeyKeyingStrategy" />
-        <deliveryStrategy class="com.github.danielwegener.logback.kafka.delivery.AsynchronousDeliveryStrategy" />
+        <keyingStrategy class="com.github.rahulsinghai.logback.kafka.keying.NoKeyKeyingStrategy" />
+        <deliveryStrategy class="com.github.rahulsinghai.logback.kafka.delivery.AsynchronousDeliveryStrategy" />
         <!-- wait indefinitely until the kafka producer was able to send the message -->
-        <!--deliveryStrategy class="com.github.danielwegener.logback.kafka.delivery.BlockingDeliveryStrategy" >
+        <!--deliveryStrategy class="com.github.rahulsinghai.logback.kafka.delivery.BlockingDeliveryStrategy" >
             <timeout>0</timeout>
         </deliveryStrategy-->
 
@@ -113,7 +121,7 @@ An example configuration could look like this:
 <configuration>
 
     <!-- This is the kafkaAppender -->
-    <appender name="kafkaAppender" class="com.github.danielwegener.logback.kafka.KafkaAppender">
+    <appender name="kafkaAppender" class="com.github.rahulsinghai.logback.kafka.KafkaAppender">
     <!-- Kafka Appender configuration -->
     </appender>
 
@@ -130,7 +138,7 @@ An example configuration could look like this:
 
 #### Custom delivery strategies
 
-You may also roll your own delivery strategy. Just extend `com.github.danielwegener.logback.kafka.delivery.DeliveryStrategy`.
+You may also roll your own delivery strategy. Just extend `com.github.rahulsinghai.logback.kafka.delivery.DeliveryStrategy`.
 
 #### Fallback-Appender
 
@@ -200,7 +208,7 @@ If none of the above keying strategies satisfies your requirements, you can easi
 
 ```java
 package foo;
-import com.github.danielwegener.logback.kafka.keying.KeyingStrategy;
+import com.github.rahulsinghai.logback.kafka.keying.KeyingStrategy;
 
 /* This is a valid example but does not really make much sense */
 public class LevelKeyingStrategy implements KeyingStrategy<ILoggingEvent> {

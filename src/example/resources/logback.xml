@@ -15,16 +15,16 @@
 
     <!-- This example configuration is probably most unreliable under
     failure conditions but wont block your application at all -->
-    <appender name="very-relaxed-and-fast-kafka-appender" class="com.github.danielwegener.logback.kafka.KafkaAppender">
+    <appender name="very-relaxed-and-fast-kafka-appender" class="com.github.rahulsinghai.logback.kafka.KafkaAppender">
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
             <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
         </encoder>
         <topic>boring-logs</topic>
         <!-- we don't care how the log messages will be partitioned  -->
-        <keyingStrategy class="com.github.danielwegener.logback.kafka.keying.NoKeyKeyingStrategy" />
+        <keyingStrategy class="com.github.rahulsinghai.logback.kafka.keying.NoKeyKeyingStrategy" />
 
         <!-- use async delivery. the application threads are not blocked by logging -->
-        <deliveryStrategy class="com.github.danielwegener.logback.kafka.delivery.AsynchronousDeliveryStrategy" />
+        <deliveryStrategy class="com.github.rahulsinghai.logback.kafka.delivery.AsynchronousDeliveryStrategy" />
 
         <!-- each <producerConfig> translates to regular kafka-client config (format: key=value) -->
         <!-- producer configs are documented here: https://kafka.apache.org/documentation.html#newproducerconfigs -->
@@ -50,16 +50,16 @@
 
     <!-- This example configuration is more restrictive and will try to ensure that every message
      is eventually delivered in an ordered fashion (as long the logging application stays alive) -->
-    <appender name="very-restrictive-kafka-appender" class="com.github.danielwegener.logback.kafka.KafkaAppender">
+    <appender name="very-restrictive-kafka-appender" class="com.github.rahulsinghai.logback.kafka.KafkaAppender">
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
             <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
         </encoder>
 
         <topic>important-logs</topic>
         <!-- ensure that every message sent by the executing host is partitioned to the same partition strategy -->
-        <keyingStrategy class="com.github.danielwegener.logback.kafka.keying.HostNameKeyingStrategy" />
+        <keyingStrategy class="com.github.rahulsinghai.logback.kafka.keying.HostNameKeyingStrategy" />
         <!-- block the logging application thread if the kafka appender cannot keep up with sending the log messages -->
-        <deliveryStrategy class="com.github.danielwegener.logback.kafka.delivery.BlockingDeliveryStrategy">
+        <deliveryStrategy class="com.github.rahulsinghai.logback.kafka.delivery.BlockingDeliveryStrategy">
             <!-- wait indefinitely until the kafka producer was able to send the message -->
             <timeout>0</timeout>
         </deliveryStrategy>
