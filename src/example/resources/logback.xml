@@ -39,6 +39,12 @@
         <!-- define a client-id that you use to identify yourself against the kafka broker -->
         <producerConfig>client.id=${HOSTNAME}-${CONTEXT_NAME}-logback-relaxed</producerConfig>
 
+        <!-- Kerberized Kafka cluster -->
+        <producerConfig>security.protocol=SASL_PLAINTEXT</producerConfig>
+        <producerConfig>sasl.kerberos.service.name=kafka</producerConfig>
+        <clientJaasConfPath>/kafka_2.12-2.1.1/jaas.conf</clientJaasConfPath>
+        <kerb5ConfPath>/kafka_2.12-2.1.1/krb5.conf</kerb5ConfPath>
+
         <!-- there is no fallback <appender-ref>. If this appender cannot deliver, it will drop its messages. -->
     </appender>
 

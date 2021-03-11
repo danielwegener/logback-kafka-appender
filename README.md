@@ -39,9 +39,9 @@ libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.2.3"
 ```
 
 This is an example `logback.xml` that uses a common `PatternLayout` to encode a log message as a string.
+- `src/main/resources/logback.xml`
 
 ```xml
-[src/main/resources/logback.xml]
 <configuration>
 
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
@@ -52,33 +52,36 @@ This is an example `logback.xml` that uses a common `PatternLayout` to encode a 
 
     <!-- This is the kafkaAppender -->
     <appender name="kafkaAppender" class="com.github.danielwegener.logback.kafka.KafkaAppender">
-            <encoder>
-                <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
-            </encoder>
-            <topic>logs</topic>
-            <keyingStrategy class="com.github.danielwegener.logback.kafka.keying.NoKeyKeyingStrategy" />
-            <deliveryStrategy class="com.github.danielwegener.logback.kafka.delivery.AsynchronousDeliveryStrategy" />
-            
-            <!-- Optional parameter to use a fixed partition -->
-            <!-- <partition>0</partition> -->
-            
-            <!-- Optional parameter to include log timestamps into the kafka message -->
-            <!-- <appendTimestamp>true</appendTimestamp> -->
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+        <topic>logs</topic>
+        <keyingStrategy class="com.github.danielwegener.logback.kafka.keying.NoKeyKeyingStrategy" />
+        <deliveryStrategy class="com.github.danielwegener.logback.kafka.delivery.AsynchronousDeliveryStrategy" />
+        <!-- wait indefinitely until the kafka producer was able to send the message -->
+        <!--deliveryStrategy class="com.github.danielwegener.logback.kafka.delivery.BlockingDeliveryStrategy" >
+            <timeout>0</timeout>
+        </deliveryStrategy-->
 
-            <!-- each <producerConfig> translates to regular kafka-client config (format: key=value) -->
-            <!-- producer configs are documented here: https://kafka.apache.org/documentation.html#newproducerconfigs -->
-            <!-- bootstrap.servers is the only mandatory producerConfig -->
-            <producerConfig>bootstrap.servers=localhost:9092</producerConfig>
+        <!-- Optional parameter to use a fixed partition -->
+        <!-- <partition>0</partition> -->
 
-            <!-- this is the fallback appender if kafka is not available. -->
-            <appender-ref ref="STDOUT" />
-        </appender>
+        <!-- Optional parameter to include log timestamps into the kafka message -->
+        <!-- <appendTimestamp>true</appendTimestamp> -->
+
+        <!-- each <producerConfig> translates to regular kafka-client config (format: key=value) -->
+        <!-- producer configs are documented here: https://kafka.apache.org/documentation.html#newproducerconfigs -->
+        <!-- bootstrap.servers is the only mandatory producerConfig -->
+        <producerConfig>bootstrap.servers=localhost:9092</producerConfig>
+
+        <!-- this is the fallback appender if kafka is not available. -->
+        <appender-ref ref="STDOUT" />
+    </appender>
 
     <root level="info">
         <appender-ref ref="kafkaAppender" />
     </root>
 </configuration>
-
 ```
 
 You may also look at the [complete configuration examples](src/example/resources/logback.xml)
