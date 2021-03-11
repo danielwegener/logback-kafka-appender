@@ -1,7 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
-## [Unreleased 0.2.0]
+## [0.2.1] - Unreleased
+### Changed
+
+## [0.2.0] - 2021-03-11
 ### Changed
 - Forked <https://github.com/danielwegener/logback-kafka-appender> repository due to non-maintenance, and it will be available with groupId `com.github.rahulsinghai`
 - Added support for Kerberized Kafka cluster (#103)

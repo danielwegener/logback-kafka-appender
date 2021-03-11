@@ -17,7 +17,7 @@ __Due to a breaking change in the Logback Encoder API you need to use at least l
 Add `logback-kafka-appender` and `logback-classic` as library dependencies to your project.
 
 ```xml
-[maven pom.xml]
+<!-- [maven pom.xml] -->
 
 <dependency>
     <groupId>com.github.rahulsinghai</groupId>
@@ -43,12 +43,13 @@ Add `logback-kafka-appender` and `logback-classic` as library dependencies to yo
 // [build.sbt]
 libraryDependencies += "com.github.rahulsinghai" % "logback-kafka-appender" % "0.2.0"
 libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.2.3"
+libraryDependencies += "com.fasterxml.jackson.core" % "jackson-databind" % "2.9.8"
 ```
 
-This is an example `logback.xml` that uses a common `PatternLayout` to encode a log message as a string.
+This is an example `logback.xml` that uses a common `PatternLayoutEncoder` to encode a log message as a string.
 
 ```xml
-[src/main/resources/logback.xml]
+<!-- [src/main/resources/logback.xml] -->
 
 <configuration>
 
@@ -66,16 +67,6 @@ This is an example `logback.xml` that uses a common `PatternLayout` to encode a 
         <topic>logs</topic>
         <keyingStrategy class="com.github.rahulsinghai.logback.kafka.keying.NoKeyKeyingStrategy" />
         <deliveryStrategy class="com.github.rahulsinghai.logback.kafka.delivery.AsynchronousDeliveryStrategy" />
-        <!-- wait indefinitely until the kafka producer was able to send the message -->
-        <!--deliveryStrategy class="com.github.rahulsinghai.logback.kafka.delivery.BlockingDeliveryStrategy" >
-            <timeout>0</timeout>
-        </deliveryStrategy-->
-
-        <!-- Optional parameter to use a fixed partition -->
-        <!-- <partition>0</partition> -->
-
-        <!-- Optional parameter to include log timestamps into the kafka message -->
-        <!-- <appendTimestamp>true</appendTimestamp> -->
 
         <!-- each <producerConfig> translates to regular kafka-client config (format: key=value) -->
         <!-- producer configs are documented here: https://kafka.apache.org/documentation.html#newproducerconfigs -->
