@@ -3,15 +3,16 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.github.rahulsinghai</groupId>
     <artifactId>logback-kafka-appender</artifactId>
-    <version>0.2.1-SNAPSHOT</version>
-
+    <version>0.2.0-SNAPSHOT</version>
+    <name>${project.artifactId}</name>
+    <description>A simple Logback appender which sends the logging output to a Kafka</description>
     <url>https://github.com/rahulsinghai/logback-kafka-appender</url>
+    
     <licenses>
         <license>
             <name>Apache License, Version 2.0</name>
             <url>http://www.apache.org/licenses/LICENSE-2.0</url>
         </license>
-
     </licenses>
 
     <properties>
