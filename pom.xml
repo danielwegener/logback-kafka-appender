@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.github.rahulsinghai</groupId>
     <artifactId>logback-kafka-appender</artifactId>
-    <version>0.2.0-SNAPSHOT</version>
+    <version>0.2.0</version>
 
     <url>https://github.com/rahulsinghai/logback-kafka-appender</url>
     <licenses>
@@ -46,7 +46,7 @@
         <connection>scm:git:git@github.com:rahulsinghai/logback-kafka-appender.git</connection>
         <developerConnection>scm:git:git@github.com:rahulsinghai/logback-kafka-appender.git</developerConnection>
         <url>git@github.com:rahulsinghai/logback-kafka-appender.git</url>
-      <tag>HEAD</tag>
+      <tag>v0.2.0</tag>
     </scm>
 
     <developers>
