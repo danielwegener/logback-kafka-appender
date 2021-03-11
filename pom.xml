@@ -3,12 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.github.rahulsinghai</groupId>
     <artifactId>logback-kafka-appender</artifactId>
-    <version>0.2.1-SNAPSHOT</version>
-    <parent>
-        <groupId>org.sonatype.oss</groupId>
-        <artifactId>oss-parent</artifactId>
-        <version>9</version>
-    </parent>
+    <version>0.2.0-SNAPSHOT</version>
 
     <url>https://github.com/rahulsinghai/logback-kafka-appender</url>
     <licenses>
@@ -71,10 +66,14 @@
     <inceptionYear>2015</inceptionYear>
     
     <distributionManagement>
-        <snapshotRepository>
-	    <id>ossrh</id>
-	    <url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>
-        </snapshotRepository>
+      <snapshotRepository>
+        <id>ossrh</id>
+        <url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>
+      </snapshotRepository>
+      <repository>
+        <id>ossrh</id>
+        <url>https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+      </repository>
     </distributionManagement>
 
     <!--
