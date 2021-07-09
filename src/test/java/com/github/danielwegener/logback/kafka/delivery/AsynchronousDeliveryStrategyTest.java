@@ -4,6 +4,7 @@ import org.apache.kafka.clients.producer.Callback;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
+import org.apache.kafka.common.KafkaException;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.errors.TimeoutException;
 import org.junit.Test;
@@ -65,6 +66,18 @@ public class AsynchronousDeliveryStrategyTest {
     @Test
     public void testCallbackWillTriggerOnFailedDeliveryOnProducerSendTimeout() {
         final TimeoutException exception = new TimeoutException("miau");
+        final ProducerRecord<String,String> record = new ProducerRecord<String,String>("topic", 0, null, "msg");
+
+        when(producer.send(same(record), any(Callback.class))).thenThrow(exception);
+
+        unit.send(producer, record, "msg", failedDeliveryCallback);
+
+        verify(failedDeliveryCallback).onFailedDelivery(eq("msg"), same(exception));
+    }
+
+    @Test
+    public void testCallbackWillTriggerOnFailedDeliveryOnAnyError() {
+        final Exception exception = new KafkaException("miau");
         final ProducerRecord<String,String> record = new ProducerRecord<String,String>("topic", 0, null, "msg");
 
         when(producer.send(same(record), any(Callback.class))).thenThrow(exception);
