@@ -35,3 +35,9 @@ jobs:
         token: ${{ secrets.CODECOV_TOKEN }}
         file: ./target/site/jacoco/jacoco.xml
         flags: unittests
+    - name: Upload to Codecov (ITest)
+      uses: codecov/codecov-action@v2.0.2
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        file: ./target/site/jacoco-it/jacoco.xml
+        flags: integrationtests
