@@ -3,9 +3,8 @@
 [![Find help or join the discussion at https://gitter.im/danielwegener/logback-kafka-appender](https://badges.gitter.im/danielwegener/logback-kafka-appender.svg)](https://gitter.im/danielwegener/logback-kafka-appender?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.danielwegener/logback-kafka-appender/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.danielwegener/logback-kafka-appender)
-![Build Status](https://github.com/danielwegener/logback-kafka-appender/actions/workflows/maven/badge.svg)
 
-
+[![Build master with Maven](https://github.com/danielwegener/logback-kafka-appender/actions/workflows/maven.yml/badge.svg)](https://github.com/danielwegener/logback-kafka-appender/actions/workflows/maven.yml)
 
 
 [![Coverage Status](https://img.shields.io/coveralls/danielwegener/logback-kafka-appender.svg)](https://coveralls.io/r/danielwegener/logback-kafka-appender)
