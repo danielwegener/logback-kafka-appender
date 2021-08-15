@@ -193,7 +193,7 @@
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.8.2</version>
+                <version>0.8.4</version>
             </plugin>
         </plugins>
     </reporting>
@@ -240,7 +240,7 @@
             <plugin>
                 <groupId>biz.aQute.bnd</groupId>
                 <artifactId>bnd-maven-plugin</artifactId>
-                <version>4.1.0</version>
+                <version>5.3.0</version>
                 <executions>
                     <execution>
                         <id>default-bnd-process</id>
@@ -299,7 +299,7 @@
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.8.2</version>
+                <version>0.8.4</version>
                 <executions>
                     <execution>
                         <id>default-prepare-agent</id>
