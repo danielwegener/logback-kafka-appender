@@ -28,7 +28,7 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-maven-
     - name: Build with Maven
-      run: mvn -B verify
+      run: ./mvnw -B verify
     - name: Upload to Codecov
       uses: codecov/codecov-action@v2.0.2
       with:
