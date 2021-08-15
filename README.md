@@ -6,8 +6,7 @@
 
 [![Build master with Maven](https://github.com/danielwegener/logback-kafka-appender/actions/workflows/maven.yml/badge.svg)](https://github.com/danielwegener/logback-kafka-appender/actions/workflows/maven.yml)
 
-
-[![Coverage Status](https://img.shields.io/coveralls/danielwegener/logback-kafka-appender.svg)](https://coveralls.io/r/danielwegener/logback-kafka-appender)
+[![codecov](https://codecov.io/gh/danielwegener/logback-kafka-appender/branch/master/graph/badge.svg?token=qHPWPEAnGU)](https://codecov.io/gh/danielwegener/logback-kafka-appender)
 
 This appender lets your application publish its application logs directly to Apache Kafka.
 
