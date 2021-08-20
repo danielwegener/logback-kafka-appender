@@ -4,6 +4,9 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.Appender;
 import ch.qos.logback.core.spi.AppenderAttachableImpl;
 import com.github.rahulsinghai.logback.kafka.delivery.FailedDeliveryCallback;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerConfig;
@@ -11,22 +14,17 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.KafkaException;
 import org.apache.kafka.common.serialization.ByteArraySerializer;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.concurrent.ConcurrentLinkedQueue;
-
 /**
  * @since 0.0.1
  */
 public class KafkaAppender<E> extends KafkaAppenderConfig<E> {
 
     /**
-     * Kafka clients uses this prefix for its slf4j logging.
-     * This appender defers appends of any Kafka logs since it could cause harmful infinite recursion/self feeding effects.
+     * Kafka clients uses this prefix for its slf4j logging. This appender defers appends of any
+     * Kafka logs since it could cause harmful infinite recursion/self feeding effects.
      */
-    private static final String KAFKA_LOGGER_PREFIX = KafkaProducer.class.getPackage().getName().replaceFirst("\\.producer$", "");
-
-    private LazyProducer lazyProducer = null;
+    private static final String KAFKA_LOGGER_PREFIX = KafkaProducer.class.getPackage().getName()
+        .replaceFirst("\\.producer$", "");
     private final AppenderAttachableImpl<E> aai = new AppenderAttachableImpl<E>();
     private final ConcurrentLinkedQueue<E> queue = new ConcurrentLinkedQueue<E>();
     private final FailedDeliveryCallback<E> failedDeliveryCallback = new FailedDeliveryCallback<E>() {
@@ -35,17 +33,21 @@ public class KafkaAppender<E> extends KafkaAppenderConfig<E> {
             aai.appendLoopOnAppenders(evt);
         }
     };
+    private LazyProducer lazyProducer = null;
 
     public KafkaAppender() {
         // setting these as config values sidesteps an unnecessary warning (minor bug in KafkaProducer)
-        addProducerConfigValue(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, ByteArraySerializer.class.getName());
-        addProducerConfigValue(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, ByteArraySerializer.class.getName());
+        addProducerConfigValue(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,
+            ByteArraySerializer.class.getName());
+        addProducerConfigValue(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
+            ByteArraySerializer.class.getName());
     }
 
     @Override
     public void doAppend(E e) {
         ensureDeferredAppends();
-        if (e instanceof ILoggingEvent && ((ILoggingEvent)e).getLoggerName().startsWith(KAFKA_LOGGER_PREFIX)) {
+        if (e instanceof ILoggingEvent && ((ILoggingEvent) e).getLoggerName()
+            .startsWith(KAFKA_LOGGER_PREFIX)) {
             deferAppend(e);
         } else {
             super.doAppend(e);
@@ -55,7 +57,9 @@ public class KafkaAppender<E> extends KafkaAppenderConfig<E> {
     @Override
     public void start() {
         // only error free appenders should be activated
-        if (!checkPrerequisites()) return;
+        if (!checkPrerequisites()) {
+            return;
+        }
 
         if (partition != null && partition < 0) {
             partition = null;
@@ -121,7 +125,8 @@ public class KafkaAppender<E> extends KafkaAppenderConfig<E> {
 
         final Long timestamp = isAppendTimestamp() ? getTimestamp(e) : null;
 
-        final ProducerRecord<byte[], byte[]> record = new ProducerRecord<>(topic, partition, timestamp, key, payload);
+        final ProducerRecord<byte[], byte[]> record = new ProducerRecord<>(topic, partition,
+            timestamp, key, payload);
 
         final Producer<byte[], byte[]> producer = lazyProducer.get();
         if (producer != null) {
@@ -168,9 +173,9 @@ public class KafkaAppender<E> extends KafkaAppenderConfig<E> {
         public Producer<byte[], byte[]> get() {
             Producer<byte[], byte[]> result = this.producer;
             if (result == null) {
-                synchronized(this) {
+                synchronized (this) {
                     result = this.producer;
-                    if(result == null) {
+                    if (result == null) {
                         this.producer = result = this.initialize();
                     }
                 }
@@ -189,7 +194,9 @@ public class KafkaAppender<E> extends KafkaAppenderConfig<E> {
             return producer;
         }
 
-        public boolean isInitialized() { return producer != null; }
+        public boolean isInitialized() {
+            return producer != null;
+        }
     }
 
 }

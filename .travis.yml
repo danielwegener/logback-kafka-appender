@@ -2,9 +2,9 @@ language: java
 sudo: false
 cache:
   directories:
-  - $HOME/.m2
+    - $HOME/.m2
 jdk:
-- openjdk8
+  - openjdk8
 install: mvn install -DskipTests=true -Dgpg.skip=true;
 
 # Run unit and integration tests

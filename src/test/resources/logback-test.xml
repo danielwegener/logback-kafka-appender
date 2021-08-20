@@ -1,28 +1,30 @@
 <configuration>
 
-   <appender name="KafkaAppender" class="com.github.rahulsinghai.logback.kafka.KafkaAppender">
-       <encoder>
-           <pattern>%msg</pattern>
-       </encoder>
+    <appender class="com.github.rahulsinghai.logback.kafka.KafkaAppender" name="KafkaAppender">
+        <deliveryStrategy
+            class="com.github.rahulsinghai.logback.kafka.delivery.AsynchronousDeliveryStrategy"/>
+
+        <encoder>
+            <pattern>%msg</pattern>
+        </encoder>
+        <keyingStrategy
+            class="com.github.rahulsinghai.logback.kafka.keying.HostNameKeyingStrategy"/>
+        <producerConfig>bootstrap.servers=localhost:9092</producerConfig>
 
         <topic>logs</topic>
-        <keyingStrategy class="com.github.rahulsinghai.logback.kafka.keying.HostNameKeyingStrategy" />
-        <deliveryStrategy class="com.github.rahulsinghai.logback.kafka.delivery.AsynchronousDeliveryStrategy" />
-
-        <producerConfig>bootstrap.servers=localhost:9092</producerConfig>
     </appender>
-    <logger name="LogbackIntegrationIT" additivity="false" level="info">
-        <appender-ref ref="KafkaAppender"/>
-    </logger>
-
-
-    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+    <appender class="ch.qos.logback.core.ConsoleAppender" name="STDOUT">
         <encoder>
             <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
         </encoder>
     </appender>
 
+
+    <logger additivity="false" level="info" name="LogbackIntegrationIT">
+        <appender-ref ref="KafkaAppender"/>
+    </logger>
+
     <root level="warn">
-        <appender-ref ref="STDOUT" />
+        <appender-ref ref="STDOUT"/>
     </root>
 </configuration>

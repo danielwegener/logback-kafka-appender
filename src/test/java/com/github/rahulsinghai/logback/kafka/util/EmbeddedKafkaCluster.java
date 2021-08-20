@@ -1,20 +1,18 @@
 package com.github.rahulsinghai.logback.kafka.util;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import kafka.metrics.KafkaMetricsReporter;
 import kafka.server.KafkaConfig;
 import kafka.server.KafkaServer;
 import org.apache.kafka.common.utils.Time;
 import scala.Some;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.util.ArrayList;
-import java.util.List;
-import scala.collection.immutable.Vector$;
-
 public class EmbeddedKafkaCluster {
+
     private final List<Integer> ports;
     private final String zkConnection;
     private final Map<String, String> baseProperties;
@@ -25,7 +23,8 @@ public class EmbeddedKafkaCluster {
     private final List<File> logDirs;
 
 
-    public EmbeddedKafkaCluster(String zkConnection, Map<String, String> baseProperties, List<Integer> ports) {
+    public EmbeddedKafkaCluster(String zkConnection, Map<String, String> baseProperties,
+        List<Integer> ports) {
         this.zkConnection = zkConnection;
         this.ports = resolvePorts(ports);
         this.baseProperties = baseProperties;
@@ -37,7 +36,7 @@ public class EmbeddedKafkaCluster {
     }
 
     private List<Integer> resolvePorts(List<Integer> ports) {
-        List<Integer> resolvedPorts = new ArrayList<Integer>();
+        List<Integer> resolvedPorts = new ArrayList<>();
         for (Integer port : ports) {
             resolvedPorts.add(resolvePort(port));
         }
@@ -67,8 +66,7 @@ public class EmbeddedKafkaCluster {
             Integer port = ports.get(i);
             File logDir = TestUtils.constructTempDir("kafka-local");
 
-            Map<String, String> properties = new HashMap<>();
-            properties.putAll(baseProperties);
+            Map<String, String> properties = new HashMap<>(baseProperties);
             properties.put("zookeeper.connect", zkConnection);
             properties.put("broker.id", String.valueOf(i + 1));
             properties.put("host.name", "localhost");
@@ -87,7 +85,7 @@ public class EmbeddedKafkaCluster {
 
     private KafkaServer startBroker(Map<String, String> props) {
         KafkaServer server = new KafkaServer(new KafkaConfig(props), Time.SYSTEM,
-                Some.apply("embedded-kafka-cluster"), Vector$.MODULE$.<KafkaMetricsReporter>empty());
+            Some.apply("embedded-kafka-cluster"), false);
         server.startup();
         return server;
     }
@@ -124,15 +122,13 @@ public class EmbeddedKafkaCluster {
 
     public void awaitShutdown() {
         for (KafkaServer broker : brokers) {
-                broker.awaitShutdown();
+            broker.awaitShutdown();
         }
     }
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder("EmbeddedKafkaCluster{");
-        sb.append("boostrapServers='").append(brokerList).append('\'');
-        sb.append('}');
-        return sb.toString();
+        return "EmbeddedKafkaCluster{boostrapServers='" + brokerList + '\''
+            + '}';
     }
 }

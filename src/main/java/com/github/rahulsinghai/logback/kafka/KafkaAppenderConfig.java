@@ -16,7 +16,8 @@ import org.apache.kafka.clients.CommonClientConfigs;
 /**
  * @since 0.0.1
  */
-public abstract class KafkaAppenderConfig<E> extends UnsynchronizedAppenderBase<E> implements AppenderAttachable<E> {
+public abstract class KafkaAppenderConfig<E> extends UnsynchronizedAppenderBase<E> implements
+    AppenderAttachable<E> {
 
     protected String topic = null;
 
@@ -30,7 +31,7 @@ public abstract class KafkaAppenderConfig<E> extends UnsynchronizedAppenderBase<
 
     protected boolean appendTimestamp = true;
 
-    protected Map<String,Object> producerConfig = new HashMap<String, Object>();
+    protected Map<String, Object> producerConfig = new HashMap<String, Object>();
 
     protected boolean checkPrerequisites() {
         boolean errorFree = true;
@@ -52,18 +53,21 @@ public abstract class KafkaAppenderConfig<E> extends UnsynchronizedAppenderBase<
         }
 
         if (keyingStrategy == null) {
-            addInfo("No explicit keyingStrategy set for the appender named [\"" + name + "\"]. Using default NoKeyKeyingStrategy.");
+            addInfo("No explicit keyingStrategy set for the appender named [\"" + name
+                + "\"]. Using default NoKeyKeyingStrategy.");
             keyingStrategy = new NoKeyKeyingStrategy();
         }
 
         if (deliveryStrategy == null) {
-            addInfo("No explicit deliveryStrategy set for the appender named [\""+name+"\"]. Using default asynchronous strategy.");
+            addInfo("No explicit deliveryStrategy set for the appender named [\"" + name
+                + "\"]. Using default asynchronous strategy.");
             deliveryStrategy = new AsynchronousDeliveryStrategy();
         }
 
         // Set system properties for JAAS and krb5 conf files
         if (errorFree && producerConfig.get(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG) != null
-            && producerConfig.get(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG).toString().contains("SASL")
+            && producerConfig.get(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG).toString()
+            .contains("SASL")
             && clientJaasConfPath != null) {
             System.setProperty("java.security.auth.login.config", clientJaasConfPath);
             if (kerb5ConfPath != null) {
@@ -88,12 +92,13 @@ public abstract class KafkaAppenderConfig<E> extends UnsynchronizedAppenderBase<
 
     public void addProducerConfig(String keyValue) {
         String[] split = keyValue.split("=", 2);
-        if(split.length == 2)
+        if (split.length == 2) {
             addProducerConfigValue(split[0], split[1]);
+        }
     }
 
     public void addProducerConfigValue(String key, Object value) {
-        this.producerConfig.put(key,value);
+        this.producerConfig.put(key, value);
     }
 
     public Map<String, Object> getProducerConfig() {

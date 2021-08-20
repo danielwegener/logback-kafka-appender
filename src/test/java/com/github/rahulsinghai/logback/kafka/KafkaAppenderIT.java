@@ -1,5 +1,11 @@
 package com.github.rahulsinghai.logback.kafka;
 
+import static junit.framework.TestCase.assertEquals;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.empty;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
@@ -9,10 +15,18 @@ import ch.qos.logback.classic.spi.LoggingEvent;
 import ch.qos.logback.core.Appender;
 import ch.qos.logback.core.AppenderBase;
 import ch.qos.logback.core.status.Status;
-import ch.qos.logback.core.status.StatusListener;
 import com.github.rahulsinghai.logback.kafka.delivery.AsynchronousDeliveryStrategy;
 import com.github.rahulsinghai.logback.kafka.keying.NoKeyKeyingStrategy;
 import com.github.rahulsinghai.logback.kafka.util.TestKafka;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.BitSet;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -24,61 +38,51 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ErrorCollector;
 
-import java.io.IOException;
-import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.BitSet;
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.ThreadLocalRandom;
-
-import static junit.framework.TestCase.assertEquals;
-import static org.hamcrest.Matchers.empty;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
-
 
 public class KafkaAppenderIT {
 
+    private static final Charset UTF8 = StandardCharsets.UTF_8;
+    private final List<ILoggingEvent> fallbackLoggingEvents = new ArrayList<>();
     @Rule
-    public ErrorCollector collector= new ErrorCollector();
-
+    public ErrorCollector collector = new ErrorCollector();
+    private final Appender<ILoggingEvent> fallbackAppender = new AppenderBase<ILoggingEvent>() {
+        @Override
+        protected void append(ILoggingEvent eventObject) {
+            collector
+                .addError(new IllegalStateException("Logged to fallback appender: " + eventObject));
+        }
+    };
     private TestKafka kafka;
     private KafkaAppender<ILoggingEvent> unit;
-    private List<ILoggingEvent> fallbackLoggingEvents = new ArrayList<>();
-
     private LoggerContext loggerContext;
 
     @Before
     public void beforeLogSystemInit() throws IOException, InterruptedException {
 
-        kafka = TestKafka.createTestKafka(1,1,1);
+        kafka = TestKafka.createTestKafka(1, 1, 1);
 
         loggerContext = new LoggerContext();
         loggerContext.putProperty("brokers.list", kafka.getBrokerList());
-        loggerContext.getStatusManager().add(new StatusListener() {
-            @Override
-            public void addStatusEvent(Status status) {
-                if (status.getEffectiveLevel() > Status.INFO) {
-                    System.err.println(status.toString());
-                    if (status.getThrowable() != null) {
-                        collector.addError(status.getThrowable());
-                    } else {
-                        collector.addError(new RuntimeException("StatusManager reported warning: "+status.toString()));
-                    }
+        loggerContext.getStatusManager().add(status -> {
+            if (status.getEffectiveLevel() > Status.INFO) {
+                System.err.println(status);
+                if (status.getThrowable() != null) {
+                    collector.addError(status.getThrowable());
                 } else {
-                    System.out.println(status.toString());
+                    collector.addError(new RuntimeException(
+                        "StatusManager reported warning: " + status));
                 }
+            } else {
+                System.out.println(status);
             }
         });
-        loggerContext.putProperty("HOSTNAME","localhost");
+        loggerContext.putProperty("HOSTNAME", "localhost");
 
         unit = new KafkaAppender<>();
         final PatternLayoutEncoder patternLayoutEncoder = new PatternLayoutEncoder();
         patternLayoutEncoder.setPattern("%msg");
         patternLayoutEncoder.setContext(loggerContext);
-        patternLayoutEncoder.setCharset(Charset.forName("UTF-8"));
+        patternLayoutEncoder.setCharset(StandardCharsets.UTF_8);
         patternLayoutEncoder.start();
         unit.setEncoder(patternLayoutEncoder);
         unit.setTopic("logs");
@@ -101,19 +105,11 @@ public class KafkaAppenderIT {
         });
     }
 
-    private final Appender<ILoggingEvent> fallbackAppender = new AppenderBase<ILoggingEvent>() {
-        @Override protected void append(ILoggingEvent eventObject) {
-            collector.addError(new IllegalStateException("Logged to fallback appender: " + eventObject));
-        }
-    };
-
-
     @After
     public void tearDown() {
         kafka.shutdown();
         kafka.awaitShutdown();
     }
-
 
     @Test
     public void testLogging() {
@@ -130,16 +126,17 @@ public class KafkaAppenderIT {
         final BitSet messages = new BitSet(messageCount);
 
         for (int i = 0; i < messageCount; ++i) {
-            final String prefix = Integer.toString(i)+ ";";
+            final String prefix = i + ";";
             final StringBuilder sb = new StringBuilder();
             sb.append(prefix);
-            byte[] b = new byte[messageSize-prefix.length()];
+            byte[] b = new byte[messageSize - prefix.length()];
             ThreadLocalRandom.current().nextBytes(b);
-            for(byte bb : b) {
-                sb.append((char)bb & 0x7F);
+            for (byte bb : b) {
+                sb.append((char) bb & 0x7F);
             }
 
-            final LoggingEvent loggingEvent = new LoggingEvent("a.b.c.d", logger, Level.INFO, sb.toString(), null, new Object[0]);
+            final LoggingEvent loggingEvent = new LoggingEvent("a.b.c.d", logger, Level.INFO,
+                sb.toString(), null, new Object[0]);
             unit.append(loggingEvent);
             messages.set(i);
         }
@@ -149,11 +146,12 @@ public class KafkaAppenderIT {
 
         final KafkaConsumer<byte[], byte[]> javaConsumerConnector = kafka.createClient();
         javaConsumerConnector.assign(Collections.singletonList(new TopicPartition("logs", 0)));
-        javaConsumerConnector.seekToBeginning(Collections.singletonList(new TopicPartition("logs", 0)));
+        javaConsumerConnector
+            .seekToBeginning(Collections.singletonList(new TopicPartition("logs", 0)));
         final long position = javaConsumerConnector.position(new TopicPartition("logs", 0));
         assertEquals(0, position);
 
-        ConsumerRecords<byte[], byte[]> poll = javaConsumerConnector.poll(10000);
+        ConsumerRecords<byte[], byte[]> poll = javaConsumerConnector.poll(Duration.ofMillis(10000));
         int readMessages = 0;
         while (!poll.isEmpty()) {
             for (ConsumerRecord<byte[], byte[]> aPoll : poll) {
@@ -166,7 +164,7 @@ public class KafkaAppenderIT {
                 messages.set(msgNo, false);
                 readMessages++;
             }
-            poll = javaConsumerConnector.poll(1000);
+            poll = javaConsumerConnector.poll(Duration.ofMillis(1000));
         }
 
         assertEquals(messageCount, readMessages);
@@ -174,7 +172,5 @@ public class KafkaAppenderIT {
         assertEquals("all messages should have been read", BitSet.valueOf(new byte[0]), messages);
 
     }
-
-    private static final Charset UTF8 = Charset.forName("UTF-8");
 
 }

@@ -7,15 +7,18 @@ import java.net.ServerSocket;
 import java.util.Random;
 
 class TestUtils {
+
     private static final Random RANDOM = new Random();
 
     private TestUtils() {
     }
 
     public static File constructTempDir(String dirPrefix) {
-        File file = new File(System.getProperty("java.io.tmpdir"), dirPrefix + RANDOM.nextInt(10000000));
+        File file = new File(System.getProperty("java.io.tmpdir"),
+            dirPrefix + RANDOM.nextInt(10000000));
         if (!file.mkdirs()) {
-            throw new RuntimeException("could not create temp directory: " + file.getAbsolutePath());
+            throw new RuntimeException(
+                "could not create temp directory: " + file.getAbsolutePath());
         }
         file.deleteOnExit();
         return file;

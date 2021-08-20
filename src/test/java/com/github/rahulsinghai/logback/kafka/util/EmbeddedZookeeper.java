@@ -2,16 +2,16 @@ package com.github.rahulsinghai.logback.kafka.util;
 
 import static org.junit.Assert.assertEquals;
 
-import org.apache.zookeeper.server.NIOServerCnxnFactory;
-import org.apache.zookeeper.server.ServerCnxnFactory;
-import org.apache.zookeeper.server.ZooKeeperServer;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import org.apache.zookeeper.server.NIOServerCnxnFactory;
+import org.apache.zookeeper.server.ServerCnxnFactory;
+import org.apache.zookeeper.server.ZooKeeperServer;
 
 public class EmbeddedZookeeper {
+
     private int port = -1;
     private int tickTime = 100;
 
@@ -39,11 +39,12 @@ public class EmbeddedZookeeper {
         return port;
     }
 
-    public void startup() throws IOException{
+    public void startup() throws IOException {
         if (this.port == -1) {
             this.port = TestUtils.getAvailablePort();
         }
-        this.factory = NIOServerCnxnFactory.createFactory(new InetSocketAddress("localhost", port), 1024);
+        this.factory = NIOServerCnxnFactory
+            .createFactory(new InetSocketAddress("localhost", port), 1024);
         this.snapshotDir = TestUtils.constructTempDir("embeeded-zk/snapshot");
         this.logDir = TestUtils.constructTempDir("embeeded-zk/log");
         final ZooKeeperServer zooKeeperServer = new ZooKeeperServer(snapshotDir, logDir, tickTime);
@@ -63,7 +64,7 @@ public class EmbeddedZookeeper {
         try {
             factory.join();
         } catch (InterruptedException e) {
-            throw new IllegalStateException("should not happen: "+e.getMessage(), e);
+            throw new IllegalStateException("should not happen: " + e.getMessage(), e);
         }
         try {
             TestUtils.deleteFile(snapshotDir);

@@ -1,19 +1,19 @@
 package com.github.rahulsinghai.logback.kafka;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasItem;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Matchers.same;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.same;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
-import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.LoggerContext;
@@ -25,6 +25,7 @@ import ch.qos.logback.core.status.ErrorStatus;
 import com.github.rahulsinghai.logback.kafka.delivery.DeliveryStrategy;
 import com.github.rahulsinghai.logback.kafka.delivery.FailedDeliveryCallback;
 import com.github.rahulsinghai.logback.kafka.keying.KeyingStrategy;
+import java.lang.reflect.Field;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.junit.After;
@@ -32,17 +33,15 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
-import java.lang.reflect.Field;
-
 public class KafkaAppenderTest {
 
     private final KafkaAppender<ILoggingEvent> unit = new KafkaAppender<>();
     private final LoggerContext ctx = new LoggerContext();
     @SuppressWarnings("unchecked")
-    private final Encoder<ILoggingEvent> encoder =  mock(Encoder.class);
-    private final KeyingStrategy<ILoggingEvent> keyingStrategy =  mock(KeyingStrategy.class);
+    private final Encoder<ILoggingEvent> encoder = mock(Encoder.class);
+    private final KeyingStrategy<ILoggingEvent> keyingStrategy = mock(KeyingStrategy.class);
     @SuppressWarnings("unchecked")
-    private final DeliveryStrategy deliveryStrategy =  mock(DeliveryStrategy.class);
+    private final DeliveryStrategy deliveryStrategy = mock(DeliveryStrategy.class);
 
     @Before
     public void before() {
@@ -71,7 +70,7 @@ public class KafkaAppenderTest {
         unit.stop();
         assertFalse("isStopped", unit.isStarted());
         assertThat(ctx.getStatusManager().getCopyOfStatusList(), empty());
-        verifyZeroInteractions(encoder, keyingStrategy, deliveryStrategy);
+        verifyNoInteractions(encoder, keyingStrategy, deliveryStrategy);
     }
 
     @Test
@@ -80,7 +79,8 @@ public class KafkaAppenderTest {
         unit.start();
         assertFalse("isStarted", unit.isStarted());
         assertThat(ctx.getStatusManager().getCopyOfStatusList(),
-                hasItem(new ErrorStatus("No topic set for the appender named [\"kafkaAppenderBase\"].", null)));
+            hasItem(new ErrorStatus("No topic set for the appender named [\"kafkaAppenderBase\"].",
+                null)));
     }
 
     @Test
@@ -89,7 +89,9 @@ public class KafkaAppenderTest {
         unit.start();
         assertFalse("isStarted", unit.isStarted());
         assertThat(ctx.getStatusManager().getCopyOfStatusList(),
-                hasItem(new ErrorStatus("No \"bootstrap.servers\" set for the appender named [\"kafkaAppenderBase\"].", null)));
+            hasItem(new ErrorStatus(
+                "No \"bootstrap.servers\" set for the appender named [\"kafkaAppenderBase\"].",
+                null)));
     }
 
     @Test
@@ -98,29 +100,38 @@ public class KafkaAppenderTest {
         unit.start();
         assertFalse("isStarted", unit.isStarted());
         assertThat(ctx.getStatusManager().getCopyOfStatusList(),
-                hasItem(new ErrorStatus("No encoder set for the appender named [\"kafkaAppenderBase\"].", null)));
+            hasItem(
+                new ErrorStatus("No encoder set for the appender named [\"kafkaAppenderBase\"].",
+                    null)));
     }
 
     @Test
     public void testAppendUsesKeying() {
         when(encoder.encode(any(ILoggingEvent.class))).thenReturn(new byte[]{0x00, 0x00});
         unit.start();
-        final LoggingEvent evt = new LoggingEvent("fqcn",ctx.getLogger("logger"), Level.ALL, "message", null, new Object[0]);
+        final LoggingEvent evt = new LoggingEvent("fqcn", ctx.getLogger("logger"), Level.ALL,
+            "message", null, new Object[0]);
         unit.append(evt);
-        verify(deliveryStrategy).send(any(KafkaProducer.class), any(ProducerRecord.class), eq(evt), any(FailedDeliveryCallback.class));
+        verify(deliveryStrategy).send(any(KafkaProducer.class), any(ProducerRecord.class), eq(evt),
+            any(FailedDeliveryCallback.class));
         verify(keyingStrategy).createKey(same(evt));
-        verify(deliveryStrategy).send(any(KafkaProducer.class), any(ProducerRecord.class), eq(evt), any(FailedDeliveryCallback.class));
+        verify(deliveryStrategy).send(any(KafkaProducer.class), any(ProducerRecord.class), eq(evt),
+            any(FailedDeliveryCallback.class));
     }
 
     @Test
     public void testAppendUsesPreConfiguredPartition() {
         when(encoder.encode(any(ILoggingEvent.class))).thenReturn(new byte[]{0x00, 0x00});
-        ArgumentCaptor<ProducerRecord> producerRecordCaptor = ArgumentCaptor.forClass(ProducerRecord.class);
+        ArgumentCaptor<ProducerRecord> producerRecordCaptor = ArgumentCaptor
+            .forClass(ProducerRecord.class);
         unit.setPartition(1);
         unit.start();
-        final LoggingEvent evt = new LoggingEvent("fqcn", ctx.getLogger("logger"), Level.ALL, "message", null, new Object[0]);
+        final LoggingEvent evt = new LoggingEvent("fqcn", ctx.getLogger("logger"), Level.ALL,
+            "message", null, new Object[0]);
         unit.append(evt);
-        verify(deliveryStrategy).send(any(KafkaProducer.class), producerRecordCaptor.capture(), eq(evt), any(FailedDeliveryCallback.class));
+        verify(deliveryStrategy)
+            .send(any(KafkaProducer.class), producerRecordCaptor.capture(), eq(evt),
+                any(FailedDeliveryCallback.class));
         final ProducerRecord value = producerRecordCaptor.getValue();
         assertThat(value.partition(), equalTo(1));
     }
@@ -129,15 +140,23 @@ public class KafkaAppenderTest {
     public void testDeferredAppend() {
         when(encoder.encode(any(ILoggingEvent.class))).thenReturn(new byte[]{0x00, 0x00});
         unit.start();
-        final LoggingEvent deferredEvent = new LoggingEvent("fqcn",ctx.getLogger("org.apache.kafka.clients.logger"), Level.ALL, "deferred message", null, new Object[0]);
+        final LoggingEvent deferredEvent = new LoggingEvent("fqcn",
+            ctx.getLogger("org.apache.kafka.clients.logger"), Level.ALL, "deferred message", null,
+            new Object[0]);
         unit.doAppend(deferredEvent);
 
-        verify(deliveryStrategy, never()).send(any(KafkaProducer.class), any(ProducerRecord.class), eq(deferredEvent), any(FailedDeliveryCallback.class));
+        verify(deliveryStrategy, never())
+            .send(any(KafkaProducer.class), any(ProducerRecord.class), eq(deferredEvent),
+                any(FailedDeliveryCallback.class));
 
-        final LoggingEvent evt = new LoggingEvent("fqcn",ctx.getLogger("logger"), Level.ALL, "message", null, new Object[0]);
+        final LoggingEvent evt = new LoggingEvent("fqcn", ctx.getLogger("logger"), Level.ALL,
+            "message", null, new Object[0]);
         unit.doAppend(evt);
-        verify(deliveryStrategy).send(any(KafkaProducer.class), any(ProducerRecord.class), eq(deferredEvent), any(FailedDeliveryCallback.class));
-        verify(deliveryStrategy).send(any(KafkaProducer.class), any(ProducerRecord.class), eq(evt), any(FailedDeliveryCallback.class));
+        verify(deliveryStrategy)
+            .send(any(KafkaProducer.class), any(ProducerRecord.class), eq(deferredEvent),
+                any(FailedDeliveryCallback.class));
+        verify(deliveryStrategy).send(any(KafkaProducer.class), any(ProducerRecord.class), eq(evt),
+            any(FailedDeliveryCallback.class));
     }
 
     @Test
@@ -149,6 +168,4 @@ public class KafkaAppenderTest {
         String constValue = (String) constField.get(null);
         assertThat(constValue, equalTo("org.apache.kafka.clients"));
     }
-
-
 }
