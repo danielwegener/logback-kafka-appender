@@ -23,6 +23,9 @@ public class AsynchronousDeliveryStrategy implements DeliveryStrategy {
             });
             return true;
         } catch (Exception e) {
+          if (e instanceof org.apache.kafka.common.errors.InterruptException) {
+            Thread.currentThread().interrupt();
+          }
             failedDeliveryCallback.onFailedDelivery(event, e);
             return false;
         }
