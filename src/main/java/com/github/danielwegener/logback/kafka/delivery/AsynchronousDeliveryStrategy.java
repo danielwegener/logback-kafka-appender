@@ -16,16 +16,16 @@ public class AsynchronousDeliveryStrategy implements DeliveryStrategy {
     public <K, V, E> boolean send(Producer<K, V> producer, ProducerRecord<K, V> record, final E event,
                                   final FailedDeliveryCallback<E> failedDeliveryCallback) {
         try {
-            producer.send(record, new Callback() {
-                @Override
-                public void onCompletion(RecordMetadata metadata, Exception exception) {
-                    if (exception != null) {
-                        failedDeliveryCallback.onFailedDelivery(event, exception);
-                    }
+            producer.send(record, (metadata, exception) -> {
+                if (exception != null) {
+                    failedDeliveryCallback.onFailedDelivery(event, exception);
                 }
             });
             return true;
-        } catch (BufferExhaustedException | TimeoutException e) {
+        } catch (Exception e) {
+          if (e instanceof org.apache.kafka.common.errors.InterruptException) {
+            Thread.currentThread().interrupt();
+          }
             failedDeliveryCallback.onFailedDelivery(event, e);
             return false;
         }
