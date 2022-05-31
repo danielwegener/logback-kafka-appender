@@ -29,7 +29,7 @@
         <maven.compiler.target>${targetJdk}</maven.compiler.target>
         <encoding>UTF-8</encoding>
         <slf4j.version>1.7.25</slf4j.version>
-        <kafka.version>2.1.1</kafka.version>
+        <kafka.version>2.8.1</kafka.version>
     </properties>
 
     <issueManagement>
