@@ -3,26 +3,26 @@ package com.github.danielwegener.logback.kafka;
 import ch.qos.logback.core.UnsynchronizedAppenderBase;
 import ch.qos.logback.core.encoder.Encoder;
 import ch.qos.logback.core.spi.AppenderAttachable;
-import com.github.danielwegener.logback.kafka.delivery.AsynchronousDeliveryStrategy;
 import com.github.danielwegener.logback.kafka.delivery.DeliveryStrategy;
+import com.github.danielwegener.logback.kafka.delivery.LateAsyncDeliveryStrategy;
 import com.github.danielwegener.logback.kafka.keying.KeyingStrategy;
 import com.github.danielwegener.logback.kafka.keying.NoKeyKeyingStrategy;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.apache.kafka.clients.producer.ProducerConfig.*;
+import static org.apache.kafka.clients.producer.ProducerConfig.BOOTSTRAP_SERVERS_CONFIG;
 
 /**
  * @since 0.0.1
  */
-public abstract class KafkaAppenderConfig<E> extends UnsynchronizedAppenderBase<E> implements AppenderAttachable<E> {
+public abstract class KafkaAppenderConfig<E, K, V> extends UnsynchronizedAppenderBase<E> implements AppenderAttachable<E> {
 
     protected String topic = null;
 
     protected Encoder<E> encoder = null;
     protected KeyingStrategy<? super E> keyingStrategy = null;
-    protected DeliveryStrategy deliveryStrategy;
+    protected DeliveryStrategy<E, K, V> deliveryStrategy;
 
     protected Integer partition = null;
 
@@ -55,8 +55,8 @@ public abstract class KafkaAppenderConfig<E> extends UnsynchronizedAppenderBase<
         }
 
         if (deliveryStrategy == null) {
-            addInfo("No explicit deliveryStrategy set for the appender named [\""+name+"\"]. Using default asynchronous strategy.");
-            deliveryStrategy = new AsynchronousDeliveryStrategy();
+            addInfo("No explicit deliveryStrategy set for the appender named [\""+name+"\"]. Using default asynchronous lazy strategy.");
+            deliveryStrategy = new LateAsyncDeliveryStrategy();
         }
 
         return errorFree;
